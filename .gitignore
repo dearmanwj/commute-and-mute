@@ -16,3 +16,7 @@
 
 # Go workspace file
 go.work
+
+# Built files
+bootstrap
+*.zip
