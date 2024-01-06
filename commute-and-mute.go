@@ -11,9 +11,9 @@ func main() {
 	lambda.Start(handler)
 }
 
-func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+func handler(request events.LambdaFunctionURLRequest) (events.LambdaFunctionURLResponse, error) {
 	log.Println("Hello world")
-	response := events.APIGatewayProxyResponse{
+	response := events.LambdaFunctionURLResponse{
 		StatusCode: 200,
 		Body:       "This is my function",
 	}
