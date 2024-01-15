@@ -20,3 +20,6 @@ go.work
 # Built files
 bootstrap
 *.zip
+
+# Access keys
+creds/
