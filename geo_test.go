@@ -7,7 +7,7 @@ import (
 )
 
 func TestIsWithinRadius(t *testing.T) {
-	withinRadius := isWithinRadius(43.593583, 1.448228, 43.564088, 1.389139)
+	withinRadius := IsWithinRadius(43.593583, 1.448228, 43.564088, 1.389139)
 	log.Println(withinRadius)
 	if withinRadius {
 		t.Fail()
