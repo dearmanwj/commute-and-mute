@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/joho/godotenv"
@@ -30,7 +31,7 @@ type ActivityUpdate struct {
 
 func main() {
 
-	godotenv.Load("local.env")
+	godotenv.Load(".env")
 
 	// sess, _ := session.NewSession(&aws.Config{
 	// 	Region: aws.String("eu-north-1")},
@@ -61,9 +62,16 @@ func handlerHttp(w http.ResponseWriter, r *http.Request) {
 		return
 	} else if url.Path == "/app/exchange_token" {
 		log.Println("Exchanging token")
+		HandleTokenExchange(url.Query().Get("code"))
 	} else {
 		http.NotFound(w, r)
 	}
+}
+
+func HandleTokenExchange(code string) {
+	const clientId int = 116416
+	clientSecret := os.Getenv("STRAVA_CLIENT_SECRET")
+	log.Printf("Getting exchange token: code: %v, id: %v, secret: %v", code, clientId, clientSecret)
 }
 
 func ProcessActivity(a Activity) (err error) {
