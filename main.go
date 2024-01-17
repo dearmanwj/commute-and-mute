@@ -6,7 +6,13 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"os"
 	"strings"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/joho/godotenv"
 )
 
 const HomeLat float64 = 43.593583
@@ -28,6 +34,17 @@ type ActivityUpdate struct {
 }
 
 func main() {
+
+	godotenv.Load("local.env")
+
+	log.Println(os.Getenv("AWS_ACCESS_KEY_ID"))
+
+	sess, _ := session.NewSession(&aws.Config{
+		Region: aws.String("eu-north-1")},
+	)
+
+	svc := dynamodb.New(sess)
+
 	http.HandleFunc("/", handlerHttp)
 	http.ListenAndServe(":8080", nil)
 }
