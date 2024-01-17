@@ -38,7 +38,7 @@ func main() {
 
 	// svc := dynamodb.New(sess)
 
-	http.HandleFunc("/app", handlerHttp)
+	http.HandleFunc("/app/", handlerHttp)
 	fs := http.FileServer(http.Dir("./static/"))
 
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
@@ -50,7 +50,7 @@ func handlerHttp(w http.ResponseWriter, r *http.Request) {
 	log.Println(r.URL)
 
 	url := r.URL
-	if url.Path == "/activity" {
+	if url.Path == "/app/activity" {
 		var a Activity
 		err := json.NewDecoder(r.Body).Decode(&a)
 		if err != nil {
@@ -59,8 +59,10 @@ func handlerHttp(w http.ResponseWriter, r *http.Request) {
 		}
 		ProcessActivity(a)
 		return
-	} else if url.Path == "/exchange-token" {
+	} else if url.Path == "/app/exchange_token" {
 		log.Println("Exchanging token")
+	} else {
+		http.NotFound(w, r)
 	}
 }
 
