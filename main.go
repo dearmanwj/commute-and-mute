@@ -1,14 +1,16 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/joho/godotenv"
 )
 
@@ -30,23 +32,24 @@ type ActivityUpdate struct {
 	HideFromHome bool
 }
 
-type AuthorizationResponse struct {
-	Token_Type    string
-	Expires_At    int64
-	Expires_In    int64
-	Refresh_Token string
-	Access_Token  string
+type User struct {
+	UserName     string
+	AccessToken  string
+	RefreshToken string
+	HomeLat      float64
+	HomeLng      float64
+	WorkLat      float64
+	WorkLng      float64
+}
+
+type TableBasics struct {
+	DynamoDbClient *dynamodb.Client
+	TableName      string
 }
 
 func main() {
 
 	godotenv.Load(".env")
-
-	// sess, _ := session.NewSession(&aws.Config{
-	// 	Region: aws.String("eu-north-1")},
-	// )
-
-	// svc := dynamodb.New(sess)
 
 	http.HandleFunc("/app/", handlerHttp)
 	fs := http.FileServer(http.Dir("./static/"))
@@ -78,24 +81,49 @@ func handlerHttp(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleTokenExchange(code string) {
-	const clientId string = "116416"
-	clientSecret := os.Getenv("STRAVA_CLIENT_SECRET")
-	log.Println("Getting exchange token...")
-
-	queryParams := url.Values{}
-	queryParams.Add("client_id", clientId)
-	queryParams.Add("client_secret", clientSecret)
-	queryParams.Add("code", code)
-	queryParams.Add("grant_type", "authorization_code")
-
-	resp, err := http.Post("https://www.strava.com/oauth/token?"+queryParams.Encode(), "text/plain", nil)
-	if err != nil {
-		log.Fatal("Error making token exchange request")
+	//auth := ExchangeToken(code)
+	auth := AuthorizationResponse{
+		Refresh_Token: "token",
+		Token_Type:    "type",
+		Expires_At:    12345,
+		Expires_In:    123,
+		Access_Token:  "token2",
+		Athlete: Athlete{
+			UserName: "wdearman",
+		},
 	}
-	defer resp.Body.Close()
-	var auth AuthorizationResponse
-	json.NewDecoder(resp.Body).Decode(&auth)
-	log.Println("Successfully exchanged token")
+
+	user := User{
+		UserName:     auth.Athlete.UserName,
+		AccessToken:  auth.Access_Token,
+		RefreshToken: auth.Refresh_Token,
+		HomeLat:      HomeLat,
+		HomeLng:      HomeLng,
+		WorkLat:      WorkLat,
+		WorkLng:      WorkLng,
+	}
+
+	log.Printf("user: %v", user)
+
+	config, _ := config.LoadDefaultConfig(context.TODO(), config.WithRegion("eu-north-1"))
+	tableBasics := TableBasics{TableName: os.Getenv("USERS_TABLE_NAME"),
+		DynamoDbClient: dynamodb.NewFromConfig(config)}
+
+	tables, _ := tableBasics.ListTables()
+
+	log.Printf("Tables: %v", tables)
+}
+
+func (basics TableBasics) ListTables() ([]string, error) {
+	var tableNames []string
+	tables, err := basics.DynamoDbClient.ListTables(
+		context.TODO(), &dynamodb.ListTablesInput{})
+	if err != nil {
+		log.Printf("Couldn't list tables. Here's why: %v\n", err)
+	} else {
+		tableNames = tables.TableNames
+	}
+	return tableNames, err
 }
 
 func ProcessActivity(a Activity) (err error) {
