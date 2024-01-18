@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/joho/godotenv"
@@ -27,6 +29,14 @@ type Activity struct {
 type ActivityUpdate struct {
 	Commute      bool
 	HideFromHome bool
+}
+
+type AuthorizationResponse struct {
+	Token_Type    string
+	Expires_At    int64
+	Expires_In    int64
+	Refresh_Token string
+	Access_Token  string
 }
 
 func main() {
@@ -71,7 +81,21 @@ func handlerHttp(w http.ResponseWriter, r *http.Request) {
 func HandleTokenExchange(code string) {
 	const clientId int = 116416
 	clientSecret := os.Getenv("STRAVA_CLIENT_SECRET")
-	log.Printf("Getting exchange token: code: %v, id: %v, secret: %v", code, clientId, clientSecret)
+	log.Println("Getting exchange token...")
+
+	queryParams := url.Values{}
+	queryParams.Add("client_id", strconv.FormatInt(int64(clientId), 10))
+	queryParams.Add("client_secret", clientSecret)
+	queryParams.Add("code", code)
+	queryParams.Add("grant_type", "authorization_code")
+
+	req, _ := http.NewRequest("POST", "https://www.strava.com/oauth/token?"+queryParams.Encode(), nil)
+	client := &http.Client{}
+	resp, _ := client.Do(req)
+	defer resp.Body.Close()
+	var auth AuthorizationResponse
+	json.NewDecoder(resp.Body).Decode(&auth)
+	log.Printf("Authorization: %v", auth)
 }
 
 func ProcessActivity(a Activity) (err error) {
