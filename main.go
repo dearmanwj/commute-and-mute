@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/joho/godotenv"
@@ -79,23 +78,24 @@ func handlerHttp(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleTokenExchange(code string) {
-	const clientId int = 116416
+	const clientId string = "116416"
 	clientSecret := os.Getenv("STRAVA_CLIENT_SECRET")
 	log.Println("Getting exchange token...")
 
 	queryParams := url.Values{}
-	queryParams.Add("client_id", strconv.FormatInt(int64(clientId), 10))
+	queryParams.Add("client_id", clientId)
 	queryParams.Add("client_secret", clientSecret)
 	queryParams.Add("code", code)
 	queryParams.Add("grant_type", "authorization_code")
 
-	req, _ := http.NewRequest("POST", "https://www.strava.com/oauth/token?"+queryParams.Encode(), nil)
-	client := &http.Client{}
-	resp, _ := client.Do(req)
+	resp, err := http.Post("https://www.strava.com/oauth/token?"+queryParams.Encode(), "text/plain", nil)
+	if err != nil {
+		log.Fatal("Error making token exchange request")
+	}
 	defer resp.Body.Close()
 	var auth AuthorizationResponse
 	json.NewDecoder(resp.Body).Decode(&auth)
-	log.Printf("Authorization: %v", auth)
+	log.Println("Successfully exchanged token")
 }
 
 func ProcessActivity(a Activity) (err error) {
