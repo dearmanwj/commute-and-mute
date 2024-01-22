@@ -19,6 +19,7 @@ type AuthorizationResponse struct {
 
 type Athlete struct {
 	UserName string
+	ID       int
 }
 
 func ExchangeToken(code string) AuthorizationResponse {

@@ -1,14 +1,12 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/joho/godotenv"
 )
 
@@ -23,6 +21,7 @@ type Activity struct {
 	Type         string
 	Start_latlng [2]float64
 	End_latlng   [2]float64
+	Athlete      Athlete
 }
 
 type ActivityUpdate struct {
@@ -46,6 +45,7 @@ func handlerHttp(w http.ResponseWriter, r *http.Request) {
 	log.Println(r.URL)
 
 	url := r.URL
+	getDbConnection()
 	if url.Path == "/app/activity" {
 		var a Activity
 		err := json.NewDecoder(r.Body).Decode(&a)
@@ -73,11 +73,12 @@ func HandleTokenExchange(code string) {
 		Access_Token:  "token2",
 		Athlete: Athlete{
 			UserName: "wdearman",
+			ID:       10503812,
 		},
 	}
 
 	user := User{
-		UserName:     auth.Athlete.UserName,
+		ID:           auth.Athlete.ID,
 		AccessToken:  auth.Access_Token,
 		RefreshToken: auth.Refresh_Token,
 		HomeLat:      HomeLat,
@@ -91,18 +92,6 @@ func HandleTokenExchange(code string) {
 	UpdateUser(user)
 }
 
-func (basics TableBasics) ListTables() ([]string, error) {
-	var tableNames []string
-	tables, err := basics.DynamoDbClient.ListTables(
-		context.TODO(), &dynamodb.ListTablesInput{})
-	if err != nil {
-		log.Printf("Couldn't list tables. Here's why: %v\n", err)
-	} else {
-		tableNames = tables.TableNames
-	}
-	return tableNames, err
-}
-
 func ProcessActivity(a Activity) (err error) {
 	if strings.EqualFold(a.Type, "ride") {
 		log.Println("Received Ride activity")
@@ -110,6 +99,8 @@ func ProcessActivity(a Activity) (err error) {
 			log.Println("is ride and commute")
 			toSend := ActivityUpdate{Commute: true, HideFromHome: true}
 			fmt.Printf("To send: %v", toSend)
+			user, _ := GetUser(a.Athlete.ID)
+			log.Printf("Retrieved user: %v\n", user.ID)
 		} else {
 			log.Println("ride not between home and work locations")
 		}
