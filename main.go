@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/joho/godotenv"
@@ -64,18 +66,18 @@ func handlerHttp(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleTokenExchange(code string) {
-	//auth := ExchangeToken(code)
-	auth := AuthorizationResponse{
-		Refresh_Token: "token",
-		Token_Type:    "type",
-		Expires_At:    12345,
-		Expires_In:    123,
-		Access_Token:  "token2",
-		Athlete: Athlete{
-			UserName: "wdearman",
-			ID:       10503812,
-		},
-	}
+	auth := ExchangeToken(code)
+	// auth := AuthorizationResponse{
+	// 	Refresh_Token: "token",
+	// 	Token_Type:    "type",
+	// 	Expires_At:    12345,
+	// 	Expires_In:    123,
+	// 	Access_Token:  "token2",
+	// 	Athlete: Athlete{
+	// 		UserName: "wdearman",
+	// 		ID:       10503812,
+	// 	},
+	// }
 
 	user := User{
 		ID:           auth.Athlete.ID,
@@ -101,12 +103,34 @@ func ProcessActivity(a Activity) (err error) {
 			fmt.Printf("To send: %v", toSend)
 			user, _ := GetUser(a.Athlete.ID)
 			log.Printf("Retrieved user: %v\n", user.ID)
+
+			client := &http.Client{}
+			data, err := json.Marshal(toSend)
+			if err != nil {
+				log.Printf("Could not generate request body: %v\n", err)
+				return err
+			}
+			req, err := http.NewRequest(http.MethodPut,
+				"https://www.strava.com/api/v3/activities/"+strconv.FormatInt(a.Id, 10),
+				bytes.NewBuffer(data))
+			if err != nil {
+				log.Printf("Error building update request: %v\n", err)
+				return err
+			}
+			resp, err := client.Do(req)
+			if err != nil {
+				log.Printf("Error sending update request: %v\n", err)
+				return err
+			}
+			log.Printf("Successfully updated activity: %v\n", resp.StatusCode)
 		} else {
 			log.Println("ride not between home and work locations")
 		}
 	}
 	return nil
 }
+
+func updateActivity(activityId string, user User)
 
 func isCommute(startLat, startLng, endLat, endLng float64) bool {
 	var isCommute bool = false
