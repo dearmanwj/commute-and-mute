@@ -6,10 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/joho/godotenv"
 )
@@ -30,21 +28,6 @@ type Activity struct {
 type ActivityUpdate struct {
 	Commute      bool
 	HideFromHome bool
-}
-
-type User struct {
-	UserName     string
-	AccessToken  string
-	RefreshToken string
-	HomeLat      float64
-	HomeLng      float64
-	WorkLat      float64
-	WorkLng      float64
-}
-
-type TableBasics struct {
-	DynamoDbClient *dynamodb.Client
-	TableName      string
 }
 
 func main() {
@@ -105,13 +88,7 @@ func HandleTokenExchange(code string) {
 
 	log.Printf("user: %v", user)
 
-	config, _ := config.LoadDefaultConfig(context.TODO(), config.WithRegion("eu-north-1"))
-	tableBasics := TableBasics{TableName: os.Getenv("USERS_TABLE_NAME"),
-		DynamoDbClient: dynamodb.NewFromConfig(config)}
-
-	tables, _ := tableBasics.ListTables()
-
-	log.Printf("Tables: %v", tables)
+	UpdateUser(user)
 }
 
 func (basics TableBasics) ListTables() ([]string, error) {
