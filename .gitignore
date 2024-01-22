@@ -24,3 +24,6 @@ bootstrap
 # Access keys
 creds/
 .env
+
+# Local settings
+.vscode/settings.json
