@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/joho/godotenv"
+	"googlemaps.github.io/maps"
 )
 
 const HomeLat float64 = 43.593583
@@ -24,6 +25,11 @@ type Activity struct {
 	Start_latlng [2]float64
 	End_latlng   [2]float64
 	Athlete      Athlete
+	Map          Map
+}
+
+type Map struct {
+	Polyline string
 }
 
 type ActivityUpdate struct {
@@ -97,7 +103,8 @@ func HandleTokenExchange(code string) {
 func ProcessActivity(a Activity) (err error) {
 	if strings.EqualFold(a.Type, "ride") {
 		log.Println("Received Ride activity")
-		if isCommute(a.Start_latlng[0], a.Start_latlng[1], a.End_latlng[0], a.End_latlng[1]) {
+		route, _ := maps.DecodePolyline(a.Map.Polyline)
+		if isCommute(route[0].Lat, route[0].Lng, route[len(route)-1].Lat, route[len(route)-1].Lng) {
 			log.Println("is ride and commute")
 			toSend := ActivityUpdate{Commute: true, HideFromHome: true}
 			fmt.Printf("To send: %v", toSend)
@@ -138,6 +145,7 @@ func ProcessActivity(a Activity) (err error) {
 }
 
 func isCommute(startLat, startLng, endLat, endLng float64) bool {
+
 	var isCommute bool = false
 	isHomeStart := IsWithinRadius(HomeLat, HomeLng, startLat, startLng)
 	if isHomeStart {
