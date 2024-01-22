@@ -117,20 +117,25 @@ func ProcessActivity(a Activity) (err error) {
 				log.Printf("Error building update request: %v\n", err)
 				return err
 			}
+			req.Header.Set("Authorization", "Bearer "+user.AccessToken)
 			resp, err := client.Do(req)
 			if err != nil {
 				log.Printf("Error sending update request: %v\n", err)
 				return err
 			}
-			log.Printf("Successfully updated activity: %v\n", resp.StatusCode)
+
+			if resp.StatusCode != 200 {
+				log.Printf("Error updating activity, status: %v\n", resp.StatusCode)
+			} else {
+				log.Printf("Successfully updated activity: %v\n", resp.StatusCode)
+			}
+			return nil
 		} else {
 			log.Println("ride not between home and work locations")
 		}
 	}
 	return nil
 }
-
-func updateActivity(activityId string, user User)
 
 func isCommute(startLat, startLng, endLat, endLng float64) bool {
 	var isCommute bool = false
