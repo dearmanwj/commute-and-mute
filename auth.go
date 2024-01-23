@@ -22,24 +22,47 @@ type Athlete struct {
 	ID       int
 }
 
-func ExchangeToken(code string) AuthorizationResponse {
+func ExchangeToken(code string) (AuthorizationResponse, error) {
+	log.Println("Getting exchange token...")
+	return makeTokenRequest(code, "authorization_code")
+}
+
+func RefreshToken(refreshToken string) (AuthorizationResponse, error) {
+	log.Println("Refreshing access token...")
+	return makeTokenRequest(refreshToken, "refresh_token")
+}
+
+func (auth AuthorizationResponse) toUser() User {
+	return User{
+		ID:           auth.Athlete.ID,
+		AccessToken:  auth.Access_Token,
+		RefreshToken: auth.Refresh_Token,
+		HomeLat:      HomeLat,
+		HomeLng:      HomeLng,
+		WorkLat:      WorkLat,
+		WorkLng:      WorkLng,
+		ExpiresAt:    auth.Expires_At,
+	}
+}
+
+func makeTokenRequest(token string, grantType string) (AuthorizationResponse, error) {
 	const clientId string = "116416"
 	clientSecret := os.Getenv("STRAVA_CLIENT_SECRET")
-	log.Println("Getting exchange token...")
 
 	queryParams := url.Values{}
 	queryParams.Add("client_id", clientId)
 	queryParams.Add("client_secret", clientSecret)
-	queryParams.Add("code", code)
-	queryParams.Add("grant_type", "authorization_code")
+	queryParams.Add("code", token)
+	queryParams.Add("grant_type", grantType)
 
 	resp, err := http.Post("https://www.strava.com/oauth/token?"+queryParams.Encode(), "text/plain", nil)
+	var auth AuthorizationResponse
 	if err != nil {
-		log.Fatal("Error making token exchange request")
+		log.Printf("Error making token exchange request")
+		return auth, err
 	}
 	defer resp.Body.Close()
-	var auth AuthorizationResponse
 	json.NewDecoder(resp.Body).Decode(&auth)
-	log.Println("Successfully exchanged token")
-	return auth
+	log.Println("Successfully obtained token")
+	return auth, nil
 }

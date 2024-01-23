@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -71,24 +72,19 @@ func handlerHttp(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func HandleTokenExchange(code string) User {
-	auth := ExchangeToken(code)
+func HandleTokenExchange(code string) (User, error) {
+	auth, err := ExchangeToken(code)
 
-	user := User{
-		ID:           auth.Athlete.ID,
-		AccessToken:  auth.Access_Token,
-		RefreshToken: auth.Refresh_Token,
-		HomeLat:      HomeLat,
-		HomeLng:      HomeLng,
-		WorkLat:      WorkLat,
-		WorkLng:      WorkLng,
-		ExpiresAt:    auth.Expires_At,
+	if err != nil {
+		return User{}, err
 	}
+
+	user := auth.toUser()
 
 	log.Printf("user: %v", user)
 
 	UpdateUser(user)
-	return user
+	return user, nil
 }
 
 func ProcessActivity(a Activity) (err error) {
@@ -97,45 +93,60 @@ func ProcessActivity(a Activity) (err error) {
 		route, _ := maps.DecodePolyline(a.Map.Polyline)
 		if isCommute(route[0].Lat, route[0].Lng, route[len(route)-1].Lat, route[len(route)-1].Lng) {
 			log.Println("is ride and commute")
-			toSend := ActivityUpdate{Commute: true, Hide_From_Home: true}
-			user, _ := GetUser(a.Athlete.ID)
-			if user.ExpiresAt < time.Now().Unix() {
-				log.Println("Token expired, refreshing")
-			}
-
-			client := &http.Client{}
-			data, err := json.Marshal(toSend)
-			if err != nil {
-				log.Printf("Could not generate request body: %v\n", err)
-				return err
-			}
-			req, err := http.NewRequest(http.MethodPut,
-				"https://www.strava.com/api/v3/activities/"+strconv.FormatInt(a.Id, 10),
-				bytes.NewBuffer(data))
-			if err != nil {
-				log.Printf("Error building update request: %v\n", err)
-				return err
-			}
-			req.Header.Set("Authorization", "Bearer "+user.AccessToken)
-			req.Header.Set("Content-Type", "application/json; charset=utf-8")
-			resp, err := client.Do(req)
-			if err != nil {
-				log.Printf("Error sending update request: %v\n", err)
-				return err
-			}
-
-			log.Printf("Request: %v\n", req)
-
-			if resp.StatusCode != 200 {
-				log.Printf("Error updating activity, status: %v\n", resp.StatusCode)
-			} else {
-				log.Printf("Successfully updated activity: %v\n", resp)
-			}
+			sendCommuteAndMuteRequest(a)
 			return nil
 		} else {
 			log.Println("ride not between home and work locations")
 		}
 	}
+	return nil
+}
+
+func sendCommuteAndMuteRequest(activity Activity) error {
+	user, err := GetUser(activity.Athlete.ID)
+
+	if err != nil {
+		log.Printf("")
+	}
+
+	if user.ExpiresAt < time.Now().Unix() {
+		log.Println("Token expired, refreshing")
+		auth, err := RefreshToken(user.RefreshToken)
+		if err != nil {
+			return err
+		}
+		user = auth.toUser()
+		UpdateUser(user)
+	}
+
+	toSend := ActivityUpdate{Commute: true, Hide_From_Home: true}
+
+	client := &http.Client{}
+	data, err := json.Marshal(toSend)
+	if err != nil {
+		log.Printf("Could not generate request body: %v\n", err)
+		return err
+	}
+	req, err := http.NewRequest(http.MethodPut,
+		"https://www.strava.com/api/v3/activities/"+strconv.FormatInt(activity.Id, 10),
+		bytes.NewBuffer(data))
+	if err != nil {
+		log.Printf("Error building update request: %v\n", err)
+		return err
+	}
+	req.Header.Set("Authorization", "Bearer "+user.AccessToken)
+	req.Header.Set("Content-Type", "application/json; charset=utf-8")
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Printf("Error sending update request: %v\n", err)
+		return err
+	}
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("error updating activity, status: %v", resp.StatusCode)
+	}
+
+	log.Printf("Successfully updated activity: %v\n", activity.Id)
 	return nil
 }
 
