@@ -3,11 +3,11 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/joho/godotenv"
 	"googlemaps.github.io/maps"
@@ -33,8 +33,8 @@ type Map struct {
 }
 
 type ActivityUpdate struct {
-	Commute      bool
-	HideFromHome bool
+	Commute        bool `json:"commute"`
+	Hide_From_Home bool `json:"hide_from_home"`
 }
 
 func main() {
@@ -71,19 +71,8 @@ func handlerHttp(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func HandleTokenExchange(code string) {
+func HandleTokenExchange(code string) User {
 	auth := ExchangeToken(code)
-	// auth := AuthorizationResponse{
-	// 	Refresh_Token: "token",
-	// 	Token_Type:    "type",
-	// 	Expires_At:    12345,
-	// 	Expires_In:    123,
-	// 	Access_Token:  "token2",
-	// 	Athlete: Athlete{
-	// 		UserName: "wdearman",
-	// 		ID:       10503812,
-	// 	},
-	// }
 
 	user := User{
 		ID:           auth.Athlete.ID,
@@ -93,11 +82,13 @@ func HandleTokenExchange(code string) {
 		HomeLng:      HomeLng,
 		WorkLat:      WorkLat,
 		WorkLng:      WorkLng,
+		ExpiresAt:    auth.Expires_At,
 	}
 
 	log.Printf("user: %v", user)
 
 	UpdateUser(user)
+	return user
 }
 
 func ProcessActivity(a Activity) (err error) {
@@ -106,10 +97,11 @@ func ProcessActivity(a Activity) (err error) {
 		route, _ := maps.DecodePolyline(a.Map.Polyline)
 		if isCommute(route[0].Lat, route[0].Lng, route[len(route)-1].Lat, route[len(route)-1].Lng) {
 			log.Println("is ride and commute")
-			toSend := ActivityUpdate{Commute: true, HideFromHome: true}
-			fmt.Printf("To send: %v", toSend)
+			toSend := ActivityUpdate{Commute: true, Hide_From_Home: true}
 			user, _ := GetUser(a.Athlete.ID)
-			log.Printf("Retrieved user: %v\n", user.ID)
+			if user.ExpiresAt < time.Now().Unix() {
+				log.Println("Token expired, refreshing")
+			}
 
 			client := &http.Client{}
 			data, err := json.Marshal(toSend)
@@ -125,16 +117,19 @@ func ProcessActivity(a Activity) (err error) {
 				return err
 			}
 			req.Header.Set("Authorization", "Bearer "+user.AccessToken)
+			req.Header.Set("Content-Type", "application/json; charset=utf-8")
 			resp, err := client.Do(req)
 			if err != nil {
 				log.Printf("Error sending update request: %v\n", err)
 				return err
 			}
 
+			log.Printf("Request: %v\n", req)
+
 			if resp.StatusCode != 200 {
 				log.Printf("Error updating activity, status: %v\n", resp.StatusCode)
 			} else {
-				log.Printf("Successfully updated activity: %v\n", resp.StatusCode)
+				log.Printf("Successfully updated activity: %v\n", resp)
 			}
 			return nil
 		} else {

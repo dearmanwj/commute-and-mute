@@ -22,6 +22,7 @@ type User struct {
 	HomeLng      float64
 	WorkLat      float64
 	WorkLng      float64
+	ExpiresAt    int64
 }
 
 type TableBasics struct {
