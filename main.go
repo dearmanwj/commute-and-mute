@@ -67,6 +67,13 @@ func handlerHttp(w http.ResponseWriter, r *http.Request) {
 	} else if url.Path == "/app/exchange_token" {
 		log.Println("Exchanging token")
 		HandleTokenExchange(url.Query().Get("code"))
+
+		cookie := http.Cookie{
+			Name:  "user-jwt",
+			Value: "user-token",
+			Path:  "/",
+		}
+		http.SetCookie(w, &cookie)
 		http.Redirect(w, r, "/static/success.html", http.StatusSeeOther)
 	} else if url.Path == "/app/user" {
 		log.Println("Update user endpoint")
