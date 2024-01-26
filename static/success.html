@@ -7,7 +7,7 @@
         <h1>Commute and Mute</h1>
         <p>Successfully linked Strava account</p>
         <p>Add home and work locations:</p>
-        <form action="/app/user" method="put">
+        <form id="user-form" onsubmit="myFunction(event)" >
             <label for="hlat">Home lat:</label><br>
             <input type="text" id="hlat" name="hlat"><br>
             <label for="hlng">Home long:</label><br>
@@ -21,6 +21,28 @@
     </body>
 
     <script>
+        const formElement = document.getElementById("user-form");
 
+        function myFunction(event) {
+            event.preventDefault();
+            const form = new FormData(formElement);
+            console.log(getCookie("user-jwt"))
+        }
+
+        function getCookie(cname) {
+            let name = cname + "=";
+            let decodedCookie = decodeURIComponent(document.cookie);
+            let ca = decodedCookie.split(';');
+            for(const element of ca) {
+                let c = element;
+                while (c.charAt(0) == ' ') {
+                c = c.substring(1);
+                }
+                if (c.indexOf(name) == 0) {
+                return c.substring(name.length, c.length);
+                }
+            }
+            return "";
+        }
     </script>
 </html>
