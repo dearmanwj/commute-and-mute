@@ -38,6 +38,13 @@ type ActivityUpdate struct {
 	Hide_From_Home bool `json:"hide_from_home"`
 }
 
+type UserFormData struct {
+	HomeLat float64 `json:"hlat"`
+	HomeLng float64 `json:"hlng"`
+	WorkLat float64 `json:"wlat"`
+	WorkLng float64 `json:"wlng"`
+}
+
 func main() {
 
 	godotenv.Load(".env")
@@ -76,7 +83,11 @@ func handlerHttp(w http.ResponseWriter, r *http.Request) {
 		http.SetCookie(w, &cookie)
 		http.Redirect(w, r, "/static/success.html", http.StatusSeeOther)
 	} else if url.Path == "/app/user" {
-		log.Println("Update user endpoint")
+		r.ParseMultipartForm(512)
+		hlat := r.Form.Get("hlat")
+		log.Printf("hlat: %v\n", hlat)
+
+		return
 	} else {
 		http.NotFound(w, r)
 	}
