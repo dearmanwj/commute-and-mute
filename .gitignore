@@ -27,3 +27,6 @@ creds/
 
 # Local settings
 .vscode/settings.json
+
+# Keys for signing jwt
+.ssh/
