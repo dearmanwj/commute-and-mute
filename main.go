@@ -86,10 +86,31 @@ func handlerHttp(w http.ResponseWriter, r *http.Request) {
 		http.SetCookie(w, &cookie)
 		http.Redirect(w, r, "/static/success.html", http.StatusSeeOther)
 	} else if url.Path == "/app/user" {
-		r.ParseMultipartForm(512)
-		hlat := r.Form.Get("hlat")
-		log.Printf("hlat: %v\n", hlat)
 
+		authHeader := r.Header.Get("Authorization")
+		token := strings.Split(authHeader, "Bearer ")[1]
+		id, err := GetConnectedUserId(token)
+		if err != nil {
+			http.Error(w, "invalid token", http.StatusUnauthorized)
+			return
+		}
+		r.ParseMultipartForm(512)
+		var (
+			hlat     float64
+			hlng     float64
+			wlat     float64
+			wlng     float64
+			parseErr error
+		)
+		hlat, parseErr = strconv.ParseFloat(r.Form.Get("hlat"), 64)
+		hlng, parseErr = strconv.ParseFloat(r.Form.Get("hlng"), 64)
+		wlat, parseErr = strconv.ParseFloat(r.Form.Get("wlat"), 64)
+		wlng, parseErr = strconv.ParseFloat(r.Form.Get("wlng"), 64)
+		if parseErr != nil {
+			http.Error(w, "invalid form data", http.StatusBadRequest)
+			return
+		}
+		HandleUserSubmitDetails(id, hlat, hlng, wlat, wlng)
 		return
 	} else {
 		http.NotFound(w, r)
@@ -123,6 +144,17 @@ func ProcessActivity(a Activity) (err error) {
 			log.Println("ride not between home and work locations")
 		}
 	}
+	return nil
+}
+
+func HandleUserSubmitDetails(id int, hlat float64, hlng float64, wlat float64, wlng float64) error {
+
+	user, err := GetUser(id)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("connected user: %v, %v, %v, %v, %v", user.ID, hlat, hlng, wlat, wlng)
 	return nil
 }
 

@@ -25,13 +25,21 @@
 
         async function myFunction(event) {
             event.preventDefault();
+            const token = getCookie("user-jwt");
             const form = new FormData(formElement);
             const req = new Request("../app/user", {
                 method: "POST",
-                body: form
+                body: form,
+                headers: {
+                    "Authorization": "Bearer " + token
+                }
             });
             const response = await fetch(req);
-            console.log(getCookie("user-jwt"))
+            if (response.ok) {
+                console.log("Success");
+            } else {
+                console.error("Error updating user");
+            }
         }
 
         function getCookie(cname) {

@@ -4,6 +4,7 @@ import (
 	"crypto/ed25519"
 	"crypto/x509"
 	"encoding/pem"
+	"errors"
 	"log"
 	"os"
 	"strconv"
@@ -33,6 +34,20 @@ func GenerateUserToken(id int) string {
 	tokenString, _ := token.SignedString(key)
 
 	return tokenString
+}
+
+func GetConnectedUserId(tokenString string) (int, error) {
+	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
+		return GetPublicKey(), nil
+	})
+	if err != nil {
+		return -1, err
+	}
+	if !token.Valid {
+		return -1, errors.New("Token invalid")
+	}
+	strId, _ := token.Claims.GetSubject()
+	return strconv.Atoi(strId)
 }
 
 func GetPublicKey() ed25519.PublicKey {
