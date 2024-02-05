@@ -73,11 +73,14 @@ func handlerHttp(w http.ResponseWriter, r *http.Request) {
 		return
 	} else if url.Path == "/app/exchange_token" {
 		log.Println("Exchanging token")
-		HandleTokenExchange(url.Query().Get("code"))
-
+		user, err := HandleTokenExchange(url.Query().Get("code"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		token := GenerateUserToken(user.ID)
 		cookie := http.Cookie{
 			Name:  "user-jwt",
-			Value: "user-token",
+			Value: token,
 			Path:  "/",
 		}
 		http.SetCookie(w, &cookie)

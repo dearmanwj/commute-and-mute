@@ -6,11 +6,12 @@ import (
 	"encoding/pem"
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func generateUserToken(id string) string {
+func GenerateUserToken(id int) string {
 
 	privateKeyRaw, _ := os.ReadFile(".ssh/key")
 
@@ -26,7 +27,7 @@ func generateUserToken(id string) string {
 
 	token := jwt.NewWithClaims(&jwt.SigningMethodEd25519{}, jwt.MapClaims{
 		"iss": "commute-and-mute",
-		"sub": id,
+		"sub": strconv.FormatInt(int64(id), 10),
 	})
 
 	tokenString, _ := token.SignedString(key)

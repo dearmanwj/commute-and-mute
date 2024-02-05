@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"strconv"
 	"testing"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -9,10 +10,10 @@ import (
 
 func TestGenerateToken(t *testing.T) {
 	// Given
-	id := "1234"
+	id := 1234
 
 	// When
-	result := generateUserToken(id)
+	result := GenerateUserToken(id)
 
 	// Then
 	token, err := jwt.Parse(result, func(token *jwt.Token) (interface{}, error) {
@@ -23,7 +24,7 @@ func TestGenerateToken(t *testing.T) {
 		t.Fail()
 	}
 	sub, _ := token.Claims.GetSubject()
-	if sub != id {
+	if sub != strconv.FormatInt(int64(id), 10) {
 		log.Print("id does not match")
 		t.Fail()
 	}
