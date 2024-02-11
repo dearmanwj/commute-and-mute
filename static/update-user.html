@@ -37,6 +37,7 @@
             const response = await fetch(req);
             if (response.ok) {
                 console.log("Success");
+                window.location.href = "/static/complete.html";
             } else {
                 console.error("Error updating user");
             }

@@ -84,7 +84,7 @@ func handlerHttp(w http.ResponseWriter, r *http.Request) {
 			Path:  "/",
 		}
 		http.SetCookie(w, &cookie)
-		http.Redirect(w, r, "/static/success.html", http.StatusSeeOther)
+		http.Redirect(w, r, "/static/update-user.html", http.StatusSeeOther)
 	} else if url.Path == "/app/user" {
 		log.Println("Updating user with home and work locations")
 		authHeader := r.Header.Get("Authorization")
