@@ -86,7 +86,7 @@ func handlerHttp(w http.ResponseWriter, r *http.Request) {
 		http.SetCookie(w, &cookie)
 		http.Redirect(w, r, "/static/success.html", http.StatusSeeOther)
 	} else if url.Path == "/app/user" {
-
+		log.Println("Updating user with home and work locations")
 		authHeader := r.Header.Get("Authorization")
 		token := strings.Split(authHeader, "Bearer ")[1]
 		id, err := GetConnectedUserId(token)
@@ -95,26 +95,23 @@ func handlerHttp(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		r.ParseMultipartForm(512)
-		var (
-			hlat     float64
-			hlng     float64
-			wlat     float64
-			wlng     float64
-			parseErr error
-		)
-		hlat, parseErr = strconv.ParseFloat(r.Form.Get("hlat"), 64)
-		hlng, parseErr = strconv.ParseFloat(r.Form.Get("hlng"), 64)
-		wlat, parseErr = strconv.ParseFloat(r.Form.Get("wlat"), 64)
-		wlng, parseErr = strconv.ParseFloat(r.Form.Get("wlng"), 64)
-		if parseErr != nil {
-			http.Error(w, "invalid form data", http.StatusBadRequest)
-			return
-		}
+		hlat := extractFloatParameterFromReq(r.Form.Get("hlat"), w)
+		hlng := extractFloatParameterFromReq(r.Form.Get("hlng"), w)
+		wlat := extractFloatParameterFromReq(r.Form.Get("wlat"), w)
+		wlng := extractFloatParameterFromReq(r.Form.Get("wlng"), w)
 		HandleUserSubmitDetails(id, hlat, hlng, wlat, wlng)
 		return
 	} else {
 		http.NotFound(w, r)
 	}
+}
+
+func extractFloatParameterFromReq(param string, w http.ResponseWriter) float64 {
+	val, err := strconv.ParseFloat(param, 64)
+	if err != nil {
+		http.Error(w, "non-numeric lat/long provided", http.StatusBadRequest)
+	}
+	return val
 }
 
 func HandleTokenExchange(code string) (User, error) {
@@ -154,7 +151,17 @@ func HandleUserSubmitDetails(id int, hlat float64, hlng float64, wlat float64, w
 		return err
 	}
 
-	log.Printf("connected user: %v, %v, %v, %v, %v", user.ID, hlat, hlng, wlat, wlng)
+	user.HomeLat = hlat
+	user.HomeLng = hlng
+	user.WorkLat = wlat
+	user.WorkLng = wlng
+
+	err = UpdateUser(user)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("updated user: %v, %v, %v, %v, %v", user.ID, hlat, hlng, wlat, wlng)
 	return nil
 }
 
