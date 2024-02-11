@@ -37,10 +37,10 @@ func (auth AuthorizationResponse) toUser() User {
 		ID:           auth.Athlete.ID,
 		AccessToken:  auth.Access_Token,
 		RefreshToken: auth.Refresh_Token,
-		HomeLat:      HomeLat,
-		HomeLng:      HomeLng,
-		WorkLat:      WorkLat,
-		WorkLng:      WorkLng,
+		HomeLat:      -1,
+		HomeLng:      -1,
+		WorkLat:      -1,
+		WorkLng:      -1,
 		ExpiresAt:    auth.Expires_At,
 	}
 }

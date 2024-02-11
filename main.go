@@ -14,10 +14,6 @@ import (
 	"googlemaps.github.io/maps"
 )
 
-const HomeLat float64 = 43.593583
-const HomeLng float64 = 1.448228
-const WorkLat float64 = 43.564060
-const WorkLng float64 = 1.389155
 const RadiusKM float64 = 0.1
 
 type Activity struct {
@@ -130,10 +126,14 @@ func HandleTokenExchange(code string) (User, error) {
 }
 
 func ProcessActivity(a Activity) (err error) {
+	user, err := GetUser(a.Athlete.ID)
+	if err != nil {
+		log.Panicf("error retrieving user with id: %v", a)
+	}
 	if strings.EqualFold(a.Type, "ride") {
 		log.Println("Received Ride activity")
 		route, _ := maps.DecodePolyline(a.Map.Polyline)
-		if isCommute(route[0].Lat, route[0].Lng, route[len(route)-1].Lat, route[len(route)-1].Lng) {
+		if isCommute(route[0].Lat, route[0].Lng, route[len(route)-1].Lat, route[len(route)-1].Lng, user) {
 			log.Println("is ride and commute")
 			sendCommuteAndMuteRequest(a)
 			return nil
@@ -213,18 +213,17 @@ func sendCommuteAndMuteRequest(activity Activity) error {
 	return nil
 }
 
-func isCommute(startLat, startLng, endLat, endLng float64) bool {
-
+func isCommute(startLat, startLng, endLat, endLng float64, user User) bool {
 	var isCommute bool = false
-	isHomeStart := IsWithinRadius(HomeLat, HomeLng, startLat, startLng)
+	isHomeStart := IsWithinRadius(user.HomeLat, user.HomeLng, startLat, startLng)
 	if isHomeStart {
 		// if home is start, is commute if end is work
-		isCommute = IsWithinRadius(WorkLat, WorkLng, endLat, endLng)
+		isCommute = IsWithinRadius(user.WorkLat, user.WorkLng, endLat, endLng)
 	} else {
-		isHomeEnd := IsWithinRadius(HomeLat, HomeLng, endLat, endLng)
+		isHomeEnd := IsWithinRadius(user.HomeLat, user.HomeLng, endLat, endLng)
 		if isHomeEnd {
 			// if home is end, is commute if start is work
-			isCommute = IsWithinRadius(WorkLat, WorkLng, startLat, startLng)
+			isCommute = IsWithinRadius(user.WorkLat, user.WorkLng, startLat, startLng)
 		}
 	}
 	return isCommute
