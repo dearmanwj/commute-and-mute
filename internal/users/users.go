@@ -1,4 +1,4 @@
-package main
+package users
 
 import (
 	"context"
@@ -74,7 +74,7 @@ func GetUser(id int) (User, error) {
 	return user, nil
 }
 
-func getDbConnection() error {
+func GetDbConnection() error {
 	tableName := os.Getenv("USERS_TABLE_NAME")
 	config, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("eu-north-1"))
 	if err != nil {

@@ -1,4 +1,4 @@
-package main
+package auth
 
 import (
 	"encoding/json"
@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"willd/commute-and-mute/internal/users"
 )
 
 type AuthorizationResponse struct {
@@ -32,8 +33,8 @@ func RefreshToken(refreshToken string) (AuthorizationResponse, error) {
 	return makeTokenRequest(refreshToken, "refresh_token")
 }
 
-func (auth AuthorizationResponse) toUser() User {
-	return User{
+func (auth AuthorizationResponse) ToUser() users.User {
+	return users.User{
 		ID:           auth.Athlete.ID,
 		AccessToken:  auth.Access_Token,
 		RefreshToken: auth.Refresh_Token,

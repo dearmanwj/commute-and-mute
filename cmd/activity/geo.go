@@ -5,6 +5,8 @@ import (
 	"math"
 )
 
+const RadiusKM float64 = 0.1
+
 func IsWithinRadius(lat1, lng1, lat2, lng2 float64) bool {
 	distKm := hsDist(
 		degToRad(lat1),
