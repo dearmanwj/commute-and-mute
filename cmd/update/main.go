@@ -2,13 +2,13 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
-	"net/http"
-	"strconv"
 	"strings"
 	"willd/commute-and-mute/internal/auth"
 	"willd/commute-and-mute/internal/users"
 
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
@@ -23,31 +23,19 @@ func main() {
 	lambda.Start(HandleUserUpdate)
 }
 
-func HandleUserUpdate(ctx context.Context, event *UserFormData) {
+func HandleUserUpdate(context context.Context, request *events.LambdaFunctionURLRequest) error {
 	users.GetDbConnection()
 	log.Println("Updating user with home and work locations")
-	authHeader := r.Header.Get("Authorization")
+	authHeader := request.Headers["Authorization"]
 	token := strings.Split(authHeader, "Bearer ")[1]
 	id, err := auth.GetConnectedUserId(token)
 	if err != nil {
-		http.Error(w, "invalid token", http.StatusUnauthorized)
-		return
+		log.Panicln(err)
 	}
-	r.ParseMultipartForm(512)
-	hlat := extractFloatParameterFromReq(r.Form.Get("hlat"), w)
-	hlng := extractFloatParameterFromReq(r.Form.Get("hlng"), w)
-	wlat := extractFloatParameterFromReq(r.Form.Get("wlat"), w)
-	wlng := extractFloatParameterFromReq(r.Form.Get("wlng"), w)
-	HandleUserSubmitDetails(id, hlat, hlng, wlat, wlng)
-	return
-}
-
-func extractFloatParameterFromReq(param string, w http.ResponseWriter) float64 {
-	val, err := strconv.ParseFloat(param, 64)
-	if err != nil {
-		http.Error(w, "non-numeric lat/long provided", http.StatusBadRequest)
-	}
-	return val
+	var formData UserFormData
+	json.Unmarshal([]byte(request.Body), &formData)
+	HandleUserSubmitDetails(id, formData.HomeLat, formData.HomeLng, formData.WorkLat, formData.WorkLng)
+	return nil
 }
 
 func HandleUserSubmitDetails(id int, hlat float64, hlng float64, wlat float64, wlng float64) error {

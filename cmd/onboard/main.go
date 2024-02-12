@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"log"
 	"willd/commute-and-mute/internal/auth"
 	"willd/commute-and-mute/internal/users"
 
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
@@ -12,7 +14,8 @@ func main() {
 	lambda.Start(HandleTokenExchange)
 }
 
-func HandleTokenExchange(code string) (users.User, error) {
+func HandleTokenExchange(context context.Context, request *events.LambdaFunctionURLRequest) (users.User, error) {
+	code := request.QueryStringParameters["code"]
 	users.GetDbConnection()
 	auth, err := auth.ExchangeToken(code)
 
