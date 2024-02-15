@@ -78,7 +78,8 @@ func sendCommuteAndMuteRequest(activity Activity) error {
 
 	if user.ExpiresAt < time.Now().Unix() {
 		log.Println("Token expired, refreshing")
-		authResponse, err := auth.RefreshToken(user.RefreshToken)
+		stravaClient := auth.NewStravaClient(auth.STRAVA_BASE_URL)
+		authResponse, err := stravaClient.RefreshToken(user.RefreshToken)
 		if err != nil {
 			return err
 		}

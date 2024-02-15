@@ -23,14 +23,27 @@ type Athlete struct {
 	ID       int
 }
 
-func ExchangeToken(code string) (AuthorizationResponse, error) {
-	log.Println("Getting exchange token...")
-	return makeTokenRequest(code, "authorization_code")
+type StravaClient struct {
+	baseUrl string
 }
 
-func RefreshToken(refreshToken string) (AuthorizationResponse, error) {
+var STRAVA_BASE_URL = "https://www.strava.com"
+var STRAVA_EXCHANGE_PATH = "/oauth/token"
+
+func NewStravaClient(baseUrl string) StravaClient {
+	return StravaClient{
+		baseUrl: baseUrl,
+	}
+}
+
+func (client StravaClient) ExchangeToken(code string) (AuthorizationResponse, error) {
+	log.Println("Getting exchange token...")
+	return client.makeTokenRequest(code, "authorization_code")
+}
+
+func (client StravaClient) RefreshToken(refreshToken string) (AuthorizationResponse, error) {
 	log.Println("Refreshing access token...")
-	return makeTokenRequest(refreshToken, "refresh_token")
+	return client.makeTokenRequest(refreshToken, "refresh_token")
 }
 
 func (auth AuthorizationResponse) ToUser() users.User {
@@ -46,7 +59,7 @@ func (auth AuthorizationResponse) ToUser() users.User {
 	}
 }
 
-func makeTokenRequest(token string, grantType string) (AuthorizationResponse, error) {
+func (client StravaClient) makeTokenRequest(token string, grantType string) (AuthorizationResponse, error) {
 	const clientId string = "116416"
 	clientSecret := os.Getenv("STRAVA_CLIENT_SECRET")
 
@@ -56,7 +69,7 @@ func makeTokenRequest(token string, grantType string) (AuthorizationResponse, er
 	queryParams.Add("code", token)
 	queryParams.Add("grant_type", grantType)
 
-	resp, err := http.Post("https://www.strava.com/oauth/token?"+queryParams.Encode(), "text/plain", nil)
+	resp, err := http.Post(client.baseUrl+STRAVA_EXCHANGE_PATH+"?"+queryParams.Encode(), "text/plain", nil)
 	var auth AuthorizationResponse
 	if err != nil {
 		log.Printf("Error making token exchange request")

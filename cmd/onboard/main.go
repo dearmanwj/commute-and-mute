@@ -17,7 +17,8 @@ func main() {
 func HandleTokenExchange(context context.Context, request *events.LambdaFunctionURLRequest) (users.User, error) {
 	code := request.QueryStringParameters["code"]
 	users.GetDbConnection()
-	auth, err := auth.ExchangeToken(code)
+	stravaClient := auth.NewStravaClient(auth.STRAVA_BASE_URL)
+	auth, err := stravaClient.ExchangeToken(code)
 
 	if err != nil {
 		return users.User{}, err
