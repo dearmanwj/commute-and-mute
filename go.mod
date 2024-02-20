@@ -5,7 +5,6 @@ go 1.21.5
 require (
 	github.com/aws/aws-sdk-go-v2/config v1.26.6
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.27.1
-	github.com/joho/godotenv v1.5.1
 	googlemaps.github.io/maps v1.7.0
 )
 
