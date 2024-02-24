@@ -50,7 +50,7 @@ type StravaClient struct {
 
 var STRAVA_BASE_URL = "https://www.strava.com"
 var STRAVA_EXCHANGE_PATH = "/oauth/token"
-var STRAVA_ACTIVITY_PATH = "/api/v3/activities/%s"
+var STRAVA_ACTIVITY_PATH = "/api/v3/activities/%v"
 
 func NewStravaClient(baseUrl string) StravaClient {
 	return StravaClient{
@@ -108,7 +108,7 @@ func (client StravaClient) makeTokenRequest(token string, grantType string) (Aut
 
 func (client StravaClient) MakeActivityUpdateRequest(activityId int64, bearerToken string) error {
 	httpClient := &http.Client{}
-	url := fmt.Sprintf(STRAVA_BASE_URL+STRAVA_ACTIVITY_PATH, activityId)
+	url := fmt.Sprintf(client.baseUrl+STRAVA_ACTIVITY_PATH, activityId)
 	body, err := json.Marshal(ActivityUpdate{Commute: true, Hide_From_Home: true})
 	if err != nil {
 		log.Panicf("cannot build activity update request body, %v", err)

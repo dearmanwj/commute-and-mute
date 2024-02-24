@@ -106,3 +106,37 @@ func mockResponse() AuthorizationResponse {
 		},
 	}
 }
+
+func TestUpdateActivity(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.String() != "/api/v3/activities/10583609809" {
+			t.Errorf("incorrect url: %v", r.URL.String())
+		}
+		if r.Method != http.MethodPut {
+			t.Error("correct url called with wrong method")
+		}
+		if r.Header.Get("Authorization") != "Bearer token" {
+			t.Error("token not used")
+		}
+
+		var updateBody ActivityUpdate
+		err := json.NewDecoder(r.Body).Decode(&updateBody)
+		if err != nil {
+			t.Errorf("error parsing request body: %v", err)
+		}
+		if (updateBody != ActivityUpdate{Commute: true, Hide_From_Home: true}) {
+			t.Errorf("incorrect update request sent: %v", updateBody)
+		}
+	}))
+	defer server.Close()
+
+	stravaClient := NewStravaClient(server.URL)
+
+	// When
+	err := stravaClient.MakeActivityUpdateRequest(10583609809, "token")
+
+	if err != nil {
+		t.Errorf("request failed: %v", err)
+	}
+
+}
