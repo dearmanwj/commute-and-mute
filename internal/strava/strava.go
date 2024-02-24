@@ -158,11 +158,12 @@ func (client StravaClient) UpdateActivity(activityId int64, bearerToken string) 
 		log.Printf("Error sending update request: %v\n", err)
 		return err
 	}
+	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("error updating activity, status: %v", resp.StatusCode)
 	}
 
-	log.Printf("Successfully updated activity: %v\n", activityId)
+	log.Printf("Successfully updated activity: %v, status code: %v\n", activityId, resp.Status)
 	return nil
 }

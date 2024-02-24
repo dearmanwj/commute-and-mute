@@ -121,7 +121,10 @@ func ProcessActivity(update StravaEvent) (err error) {
 		route, _ := maps.DecodePolyline(newActivity.Map.Polyline)
 		if isCommute(route[0].Lat, route[0].Lng, route[len(route)-1].Lat, route[len(route)-1].Lng, user) {
 			log.Println("is ride and commute")
-			stravaClient.UpdateActivity(newActivity.Id, token)
+			err := stravaClient.UpdateActivity(newActivity.Id, token)
+			if err != nil {
+				return err
+			}
 			return nil
 		} else {
 			log.Println("ride not between home and work locations")
