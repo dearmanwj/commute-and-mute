@@ -41,12 +41,16 @@ func handleNewActivity(ctx context.Context, request *events.LambdaFunctionURLReq
 		if err != nil {
 			return nil, fmt.Errorf("failed to decode event: %v", err)
 		}
-		err = ProcessActivity(update)
 		var message string
-		if err != nil {
-			message = "error processing activity"
+		if update.ObjectType == "activity" {
+			err = ProcessActivity(update)
+			if err != nil {
+				message = "error processing activity"
+			} else {
+				message = "activity handled successfully"
+			}
 		} else {
-			message = "activity handled successfully"
+			message = "update event not an activity, no action required"
 		}
 		return &message, err
 	}
