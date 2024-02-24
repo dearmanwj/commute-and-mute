@@ -41,6 +41,7 @@ func handleNewActivity(ctx context.Context, request *events.LambdaFunctionURLReq
 		if err != nil {
 			return nil, fmt.Errorf("failed to decode event: %v", err)
 		}
+		log.Printf("handling update event: %v", update)
 		var message string
 		if update.ObjectType == "activity" && update.AspectType == "create" {
 			err = ProcessActivity(update)
@@ -71,7 +72,7 @@ func GetBearerToken(user users.User, stravaClient *strava.StravaClient) string {
 		log.Println("Token expired, refreshing")
 		authResponse, err := stravaClient.RefreshToken(user.RefreshToken)
 		if err != nil {
-			log.Panic("could not refresh user token")
+			log.Panicf("could not refresh user token: %v", err)
 		}
 		user = authResponse.ToUser()
 		users.UpdateUser(user)
@@ -83,8 +84,8 @@ func GetBearerToken(user users.User, stravaClient *strava.StravaClient) string {
 func ProcessActivity(update StravaEvent) (err error) {
 	users.GetDbConnection()
 	user, err := users.GetUser(int(update.OwnerId))
-	if err != nil {
-		log.Panicf("error retrieving user with id: %v", update.OwnerId)
+	if err != nil || user.ID == 0 {
+		return fmt.Errorf("error retrieving user with id: %v, %v", update.OwnerId, err)
 	}
 
 	stravaClient := strava.NewStravaClient(strava.STRAVA_BASE_URL)

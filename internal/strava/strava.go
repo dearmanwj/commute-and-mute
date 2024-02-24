@@ -68,6 +68,9 @@ func (client StravaClient) ExchangeToken(code string) (AuthorizationResponse, er
 
 func (client StravaClient) RefreshToken(refreshToken string) (AuthorizationResponse, error) {
 	log.Println("Refreshing access token...")
+	if refreshToken == "" {
+		return AuthorizationResponse{}, errors.New("refresh token is empty")
+	}
 	return client.makeTokenRequest(refreshToken, "refresh_token")
 }
 
@@ -91,7 +94,11 @@ func (client StravaClient) makeTokenRequest(token string, grantType string) (Aut
 	queryParams := url.Values{}
 	queryParams.Add("client_id", clientId)
 	queryParams.Add("client_secret", clientSecret)
-	queryParams.Add("code", token)
+	if grantType == "code" {
+		queryParams.Add("code", token)
+	} else if grantType == "refresh_token" {
+		queryParams.Add("refresh_token", token)
+	}
 	queryParams.Add("grant_type", grantType)
 
 	resp, err := http.Post(client.baseUrl+STRAVA_EXCHANGE_PATH+"?"+queryParams.Encode(), "text/plain", nil)
@@ -101,6 +108,9 @@ func (client StravaClient) makeTokenRequest(token string, grantType string) (Aut
 		return auth, err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return auth, fmt.Errorf("error authorizing user: %v", resp.Status)
+	}
 	json.NewDecoder(resp.Body).Decode(&auth)
 	log.Println("Successfully obtained token")
 	return auth, nil

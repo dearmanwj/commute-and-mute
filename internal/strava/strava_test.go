@@ -66,7 +66,7 @@ func TestRefreshToken(t *testing.T) {
 	code := "my_auth_token"
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Query().Get("code") != code {
+		if r.URL.Query().Get("refresh_token") != code {
 			t.Error("code not in query params")
 		}
 		if r.URL.Query().Get("grant_type") != "refresh_token" {
