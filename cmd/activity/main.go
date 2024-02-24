@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log"
 	"strings"
 	"time"
@@ -17,6 +18,9 @@ func main() {
 }
 
 func handleNewActivity(ctx context.Context, event *strava.Activity) (*string, error) {
+	if event.Id == 0 {
+		return nil, errors.New("unparseable activity")
+	}
 	ProcessActivity(*event)
 	return nil, nil
 }
