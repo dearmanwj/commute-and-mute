@@ -74,8 +74,8 @@ func TestRefreshToken(t *testing.T) {
 		}
 
 		responseBody := mockResponse()
-		repsonseBytes, _ := json.Marshal(responseBody)
-		w.Write(repsonseBytes)
+		responseBytes, _ := json.Marshal(responseBody)
+		w.Write(responseBytes)
 	}))
 	defer server.Close()
 
