@@ -10,46 +10,23 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"willd/commute-and-mute/internal/auth"
+	"willd/commute-and-mute/internal/strava"
 	"willd/commute-and-mute/internal/users"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"googlemaps.github.io/maps"
 )
 
-type Activity struct {
-	Id           int64
-	Type         string
-	Start_latlng [2]float64
-	End_latlng   [2]float64
-	Athlete      Athlete
-	Map          Map
-}
-
-type ActivityUpdate struct {
-	Commute        bool `json:"commute"`
-	Hide_From_Home bool `json:"hide_from_home"`
-}
-
-type Athlete struct {
-	UserName string
-	ID       int
-}
-
-type Map struct {
-	Polyline string
-}
-
 func main() {
 	lambda.Start(handleNewActivity)
 }
 
-func handleNewActivity(ctx context.Context, event *Activity) (*string, error) {
+func handleNewActivity(ctx context.Context, event *strava.Activity) (*string, error) {
 	ProcessActivity(*event)
 	return nil, nil
 }
 
-func ProcessActivity(a Activity) (err error) {
+func ProcessActivity(a strava.Activity) (err error) {
 	users.GetDbConnection()
 	user, err := users.GetUser(a.Athlete.ID)
 	if err != nil {
@@ -69,7 +46,7 @@ func ProcessActivity(a Activity) (err error) {
 	return nil
 }
 
-func sendCommuteAndMuteRequest(activity Activity) error {
+func sendCommuteAndMuteRequest(activity strava.Activity) error {
 	user, err := users.GetUser(activity.Athlete.ID)
 
 	if err != nil {
@@ -78,7 +55,7 @@ func sendCommuteAndMuteRequest(activity Activity) error {
 
 	if user.ExpiresAt < time.Now().Unix() {
 		log.Println("Token expired, refreshing")
-		stravaClient := auth.NewStravaClient(auth.STRAVA_BASE_URL)
+		stravaClient := strava.NewStravaClient(strava.STRAVA_BASE_URL)
 		authResponse, err := stravaClient.RefreshToken(user.RefreshToken)
 		if err != nil {
 			return err
@@ -87,7 +64,7 @@ func sendCommuteAndMuteRequest(activity Activity) error {
 		users.UpdateUser(user)
 	}
 
-	toSend := ActivityUpdate{Commute: true, Hide_From_Home: true}
+	toSend := strava.ActivityUpdate{Commute: true, Hide_From_Home: true}
 
 	client := &http.Client{}
 	data, err := json.Marshal(toSend)

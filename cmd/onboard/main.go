@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"log"
-	"willd/commute-and-mute/internal/auth"
+	"willd/commute-and-mute/internal/strava"
 	"willd/commute-and-mute/internal/users"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -17,7 +17,7 @@ func main() {
 func HandleTokenExchange(context context.Context, request *events.LambdaFunctionURLRequest) (users.User, error) {
 	code := request.QueryStringParameters["code"]
 	users.GetDbConnection()
-	stravaClient := auth.NewStravaClient(auth.STRAVA_BASE_URL)
+	stravaClient := strava.NewStravaClient(strava.STRAVA_BASE_URL)
 	auth, err := stravaClient.ExchangeToken(code)
 
 	if err != nil {

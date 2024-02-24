@@ -1,4 +1,4 @@
-package auth
+package strava
 
 import (
 	"encoding/json"
@@ -22,6 +22,24 @@ type AuthorizationResponse struct {
 type Athlete struct {
 	UserName string
 	ID       int
+}
+
+type Activity struct {
+	Id           int64
+	Type         string
+	Start_latlng [2]float64
+	End_latlng   [2]float64
+	Athlete      Athlete
+	Map          Map
+}
+
+type ActivityUpdate struct {
+	Commute        bool `json:"commute"`
+	Hide_From_Home bool `json:"hide_from_home"`
+}
+
+type Map struct {
+	Polyline string
 }
 
 type StravaClient struct {

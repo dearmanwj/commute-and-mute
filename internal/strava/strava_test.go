@@ -1,4 +1,4 @@
-package auth
+package strava
 
 import (
 	"encoding/json"
