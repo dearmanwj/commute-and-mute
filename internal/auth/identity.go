@@ -14,7 +14,7 @@ import (
 
 func GenerateUserToken(id int) string {
 
-	privateKeyRaw, _ := os.ReadFile(".ssh/key")
+	privateKeyRaw, _ := os.ReadFile("../../.ssh/key")
 
 	block, _ := pem.Decode(privateKeyRaw)
 	if block == nil || block.Type != "PRIVATE KEY" {
@@ -51,7 +51,7 @@ func GetConnectedUserId(tokenString string) (int, error) {
 }
 
 func GetPublicKey() ed25519.PublicKey {
-	publicKeyRaw, _ := os.ReadFile(".ssh/key.pub")
+	publicKeyRaw, _ := os.ReadFile("../../.ssh/key.pub")
 
 	block, _ := pem.Decode(publicKeyRaw)
 	if block == nil || block.Type != "PUBLIC KEY" {
