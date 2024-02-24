@@ -42,7 +42,7 @@ func handleNewActivity(ctx context.Context, request *events.LambdaFunctionURLReq
 			return nil, fmt.Errorf("failed to decode event: %v", err)
 		}
 		var message string
-		if update.ObjectType == "activity" {
+		if update.ObjectType == "activity" && update.AspectType == "create" {
 			err = ProcessActivity(update)
 			if err != nil {
 				message = "error processing activity"
@@ -50,7 +50,7 @@ func handleNewActivity(ctx context.Context, request *events.LambdaFunctionURLReq
 				message = "activity handled successfully"
 			}
 		} else {
-			message = "update event not an activity, no action required"
+			message = "update event not a create activity, no action required"
 		}
 		return &message, err
 	}
