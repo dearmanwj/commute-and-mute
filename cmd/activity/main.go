@@ -2,27 +2,57 @@ package main
 
 import (
 	"context"
-	"errors"
+	"encoding/json"
+	"fmt"
 	"log"
 	"strings"
 	"time"
 	"willd/commute-and-mute/internal/strava"
 	"willd/commute-and-mute/internal/users"
 
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"googlemaps.github.io/maps"
 )
+
+type StravaEvent struct {
+	AspectType     string  `json:"aspect_type"`
+	EventTime      int64   `json:"event_time"`
+	ObjectId       int64   `json:"object_id"`
+	ObjectType     string  `json:"object_type"`
+	OwnerId        int64   `json:"owner_id"`
+	SubscriptionId int64   `json:"subscription_id"`
+	Updates        Updates `json:"updates"`
+}
+
+type Updates struct {
+	Title      string `json:"title"`
+	UpdateType string `json:"type"`
+	Private    bool   `json:"private"`
+}
 
 func main() {
 	lambda.Start(handleNewActivity)
 }
 
-func handleNewActivity(ctx context.Context, event *strava.Activity) (*string, error) {
-	if event.Id == 0 {
-		return nil, errors.New("unparseable activity")
+func handleNewActivity(ctx context.Context, request *events.LambdaFunctionURLRequest) (*string, error) {
+	if request.RequestContext.HTTP.Method == "POST" {
+		update, err := DecodeUpdateEvent(request.Body)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode event: %v", err)
+		}
+
 	}
-	ProcessActivity(*event)
 	return nil, nil
+}
+
+func DecodeUpdateEvent(rawEvent string) (StravaEvent, error) {
+	var update StravaEvent
+	err := json.Unmarshal([]byte(rawEvent), &update)
+	if err != nil {
+		return StravaEvent{}, err
+	}
+	return update, nil
 }
 
 func ProcessActivity(a strava.Activity) (err error) {
@@ -65,10 +95,6 @@ func sendCommuteAndMuteRequest(activity strava.Activity) error {
 	}
 
 	return stravaClient.MakeActivityUpdateRequest(activity.Id, user.AccessToken)
-}
-
-func GetUser(i int) {
-	panic("unimplemented")
 }
 
 func isCommute(startLat, startLng, endLat, endLng float64, user users.User) bool {

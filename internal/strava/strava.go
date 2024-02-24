@@ -106,6 +106,30 @@ func (client StravaClient) makeTokenRequest(token string, grantType string) (Aut
 	return auth, nil
 }
 
+func (client StravaClient) GetActivity(activityId int64, bearerToken string) (Activity, error) {
+	httpClient := &http.Client{}
+	url := fmt.Sprintf(client.baseUrl+STRAVA_ACTIVITY_PATH, activityId)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		log.Panic("cannot build activity get request")
+	}
+	req.Header.Set("Authorization", "Bearer "+bearerToken)
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		log.Panic("could not execute get activity request")
+	}
+	if resp.StatusCode == http.StatusUnauthorized {
+		return Activity{}, errors.New("unauthorized")
+	}
+	defer resp.Body.Close()
+	var activity Activity
+	err = json.NewDecoder(resp.Body).Decode(&activity)
+	if err != nil {
+		log.Panicf("could not decode activity response: %v", err)
+	}
+	return activity, nil
+}
+
 func (client StravaClient) MakeActivityUpdateRequest(activityId int64, bearerToken string) error {
 	httpClient := &http.Client{}
 	url := fmt.Sprintf(client.baseUrl+STRAVA_ACTIVITY_PATH, activityId)

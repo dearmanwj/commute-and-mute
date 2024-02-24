@@ -140,3 +140,60 @@ func TestUpdateActivity(t *testing.T) {
 	}
 
 }
+
+func TestGetActivityOK(t *testing.T) {
+	// Given
+	toReturn := Activity{
+		Id:           10583609809,
+		Type:         "run",
+		Start_latlng: [2]float64{12.34, 56.78},
+		End_latlng:   [2]float64{12.34, 56.78},
+		Athlete:      Athlete{UserName: "user", ID: 12345},
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.String() != "/api/v3/activities/10583609809" {
+			t.Errorf("incorrect url: %v", r.URL.String())
+		}
+		if r.Method != http.MethodGet {
+			t.Error("correct url called with wrong method")
+		}
+		if r.Header.Get("Authorization") != "Bearer token" {
+			t.Error("token not used")
+		}
+
+		json.NewEncoder(w).Encode(toReturn)
+	}))
+	defer server.Close()
+
+	stravaClient := NewStravaClient(server.URL)
+
+	// When
+	result, err := stravaClient.GetActivity(10583609809, "token")
+
+	// Then
+	if err != nil {
+		t.Error("error getting activity")
+	}
+	if result != toReturn {
+		t.Error("incorrect activity returned")
+	}
+}
+
+func TestGetActivityHandleUnauthorized(t *testing.T) {
+	// Given
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+	}))
+	defer server.Close()
+
+	stravaClient := NewStravaClient(server.URL)
+
+	// When
+	_, err := stravaClient.GetActivity(10583609809, "token")
+
+	// Then
+	if err == nil {
+		t.Error("did not pass on unauthorized message")
+	}
+}
