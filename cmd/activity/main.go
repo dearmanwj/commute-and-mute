@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"time"
 	"willd/commute-and-mute/internal/strava"
@@ -36,13 +38,14 @@ func main() {
 }
 
 func handleNewActivity(ctx context.Context, request *events.LambdaFunctionURLRequest) (*string, error) {
+	var message string
+	var err error
 	if request.RequestContext.HTTP.Method == "POST" {
 		update, err := DecodeUpdateEvent(request.Body)
 		if err != nil {
 			return nil, fmt.Errorf("failed to decode event: %v", err)
 		}
 		log.Printf("handling update event: %v", update)
-		var message string
 		if update.ObjectType == "activity" && update.AspectType == "create" {
 			err = ProcessActivity(update)
 			if err != nil {
@@ -53,9 +56,24 @@ func handleNewActivity(ctx context.Context, request *events.LambdaFunctionURLReq
 		} else {
 			message = "update event not a create activity, no action required"
 		}
-		return &message, err
+	} else if request.RequestContext.HTTP.Method == "GET" {
+		log.Printf("confirming webhook subscription")
+		verifyToken, present := os.LookupEnv("WEBHOOK_VERIFY_TOKEN")
+		if !present {
+			log.Panicln("Webhook verification not configured")
+		}
+		if request.QueryStringParameters["hub.mode"] == "subscribe" &&
+			request.QueryStringParameters["hub.verify_token"] == verifyToken {
+			message = request.QueryStringParameters["hub.challenge"]
+		} else {
+			message = "webhook verification failed"
+			err = errors.New("invalid parameters")
+		}
+	} else {
+		message = "request not handled"
+		err = errors.New("unrecognized request")
 	}
-	return nil, nil
+	return &message, err
 }
 
 func DecodeUpdateEvent(rawEvent string) (StravaEvent, error) {
