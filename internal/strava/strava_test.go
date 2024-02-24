@@ -133,7 +133,7 @@ func TestUpdateActivity(t *testing.T) {
 	stravaClient := NewStravaClient(server.URL)
 
 	// When
-	err := stravaClient.MakeActivityUpdateRequest(10583609809, "token")
+	err := stravaClient.UpdateActivity(10583609809, "token")
 
 	if err != nil {
 		t.Errorf("request failed: %v", err)

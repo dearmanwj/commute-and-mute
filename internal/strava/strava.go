@@ -140,7 +140,7 @@ func (client StravaClient) GetActivity(activityId int64, bearerToken string) (Ac
 	return activity, nil
 }
 
-func (client StravaClient) MakeActivityUpdateRequest(activityId int64, bearerToken string) error {
+func (client StravaClient) UpdateActivity(activityId int64, bearerToken string) error {
 	httpClient := &http.Client{}
 	url := fmt.Sprintf(client.baseUrl+STRAVA_ACTIVITY_PATH, activityId)
 	body, err := json.Marshal(ActivityUpdate{Commute: true, Hide_From_Home: true})
