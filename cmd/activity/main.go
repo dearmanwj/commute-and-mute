@@ -41,7 +41,14 @@ func handleNewActivity(ctx context.Context, request *events.LambdaFunctionURLReq
 		if err != nil {
 			return nil, fmt.Errorf("failed to decode event: %v", err)
 		}
-
+		err = ProcessActivity(update)
+		var message string
+		if err != nil {
+			message = "error processing activity"
+		} else {
+			message = "activity handled successfully"
+		}
+		return &message, err
 	}
 	return nil, nil
 }
@@ -55,46 +62,48 @@ func DecodeUpdateEvent(rawEvent string) (StravaEvent, error) {
 	return update, nil
 }
 
-func ProcessActivity(a strava.Activity) (err error) {
-	users.GetDbConnection()
-	user, err := users.GetUser(a.Athlete.ID)
-	if err != nil {
-		log.Panicf("error retrieving user with id: %v", a)
+func GetBearerToken(user users.User, stravaClient *strava.StravaClient) string {
+	if user.ExpiresAt < time.Now().Unix() {
+		log.Println("Token expired, refreshing")
+		authResponse, err := stravaClient.RefreshToken(user.RefreshToken)
+		if err != nil {
+			log.Panic("could not refresh user token")
+		}
+		user = authResponse.ToUser()
+		users.UpdateUser(user)
 	}
-	if strings.EqualFold(a.Type, "ride") {
+
+	return user.AccessToken
+}
+
+func ProcessActivity(update StravaEvent) (err error) {
+	users.GetDbConnection()
+	user, err := users.GetUser(int(update.OwnerId))
+	if err != nil {
+		log.Panicf("error retrieving user with id: %v", update.OwnerId)
+	}
+
+	stravaClient := strava.NewStravaClient(strava.STRAVA_BASE_URL)
+
+	token := GetBearerToken(user, &stravaClient)
+
+	newActivity, err := stravaClient.GetActivity(update.ObjectId, token)
+	if err != nil {
+		return err
+	}
+
+	if strings.EqualFold(newActivity.Type, "ride") {
 		log.Println("Received Ride activity")
-		route, _ := maps.DecodePolyline(a.Map.Polyline)
+		route, _ := maps.DecodePolyline(newActivity.Map.Polyline)
 		if isCommute(route[0].Lat, route[0].Lng, route[len(route)-1].Lat, route[len(route)-1].Lng, user) {
 			log.Println("is ride and commute")
-			sendCommuteAndMuteRequest(a)
+			stravaClient.MakeActivityUpdateRequest(newActivity.Id, token)
 			return nil
 		} else {
 			log.Println("ride not between home and work locations")
 		}
 	}
 	return nil
-}
-
-func sendCommuteAndMuteRequest(activity strava.Activity) error {
-	user, err := users.GetUser(activity.Athlete.ID)
-
-	if err != nil {
-		return err
-	}
-
-	stravaClient := strava.NewStravaClient(strava.STRAVA_BASE_URL)
-
-	if user.ExpiresAt < time.Now().Unix() {
-		log.Println("Token expired, refreshing")
-		authResponse, err := stravaClient.RefreshToken(user.RefreshToken)
-		if err != nil {
-			return err
-		}
-		user = authResponse.ToUser()
-		users.UpdateUser(user)
-	}
-
-	return stravaClient.MakeActivityUpdateRequest(activity.Id, user.AccessToken)
 }
 
 func isCommute(startLat, startLng, endLat, endLng float64, user users.User) bool {
