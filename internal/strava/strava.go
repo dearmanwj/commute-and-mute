@@ -164,6 +164,6 @@ func (client StravaClient) UpdateActivity(activityId int64, bearerToken string) 
 		return fmt.Errorf("error updating activity, status: %v", resp.StatusCode)
 	}
 
-	log.Printf("Successfully updated activity: %v, status code: %v\n", activityId, resp.Status)
+	log.Printf("Successfully updated commute activity: %v, status code: %v\n", activityId, resp.Status)
 	return nil
 }
