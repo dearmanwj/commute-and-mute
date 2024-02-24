@@ -1,8 +1,10 @@
 package strava
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -48,6 +50,7 @@ type StravaClient struct {
 
 var STRAVA_BASE_URL = "https://www.strava.com"
 var STRAVA_EXCHANGE_PATH = "/oauth/token"
+var STRAVA_ACTIVITY_PATH = "/api/v3/activities/%s"
 
 func NewStravaClient(baseUrl string) StravaClient {
 	return StravaClient{
@@ -101,4 +104,31 @@ func (client StravaClient) makeTokenRequest(token string, grantType string) (Aut
 	json.NewDecoder(resp.Body).Decode(&auth)
 	log.Println("Successfully obtained token")
 	return auth, nil
+}
+
+func (client StravaClient) MakeActivityUpdateRequest(activityId int64, bearerToken string) error {
+	httpClient := &http.Client{}
+	url := fmt.Sprintf(STRAVA_BASE_URL+STRAVA_ACTIVITY_PATH, activityId)
+	body, err := json.Marshal(ActivityUpdate{Commute: true, Hide_From_Home: true})
+	if err != nil {
+		log.Panicf("cannot build activity update request body, %v", err)
+	}
+	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(body))
+	if err != nil {
+		log.Panicf("cannot build activity update request, %v", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+bearerToken)
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		log.Printf("Error sending update request: %v\n", err)
+		return err
+	}
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("error updating activity, status: %v", resp.StatusCode)
+	}
+
+	log.Printf("Successfully updated activity: %v\n", activityId)
+	return nil
 }
