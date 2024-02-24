@@ -74,7 +74,8 @@ func GetBearerToken(user users.User, stravaClient *strava.StravaClient) string {
 		if err != nil {
 			log.Panicf("could not refresh user token: %v", err)
 		}
-		user = authResponse.ToUser()
+		user.AccessToken = authResponse.Access_Token
+		user.ExpiresAt = authResponse.Expires_At
 		users.UpdateUser(user)
 	}
 
