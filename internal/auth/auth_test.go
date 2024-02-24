@@ -39,6 +39,28 @@ func TestExchangeToken(t *testing.T) {
 	}
 }
 
+func TestExchangeTokenEmptyCode(t *testing.T) {
+	// Given
+	var code string
+	params := map[string]string{}
+	code = params["code"]
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("test"))
+	}))
+	defer server.Close()
+
+	client := NewStravaClient(server.URL)
+
+	// When
+	_, err := client.ExchangeToken(code)
+
+	// Then
+	if err == nil {
+		t.Errorf("error calling client: %v", err)
+	}
+}
+
 func TestRefreshToken(t *testing.T) {
 	// Given
 	code := "my_auth_token"

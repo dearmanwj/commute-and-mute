@@ -2,6 +2,7 @@ package auth
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"net/url"
@@ -38,6 +39,9 @@ func NewStravaClient(baseUrl string) StravaClient {
 
 func (client StravaClient) ExchangeToken(code string) (AuthorizationResponse, error) {
 	log.Println("Getting exchange token...")
+	if code == "" {
+		return AuthorizationResponse{}, errors.New("code is empty")
+	}
 	return client.makeTokenRequest(code, "authorization_code")
 }
 
