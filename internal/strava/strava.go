@@ -152,6 +152,7 @@ func (client StravaClient) UpdateActivity(activityId int64, bearerToken string) 
 		log.Panicf("cannot build activity update request, %v", err)
 	}
 	req.Header.Set("Authorization", "Bearer "+bearerToken)
+	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := httpClient.Do(req)
 	if err != nil {
@@ -159,7 +160,6 @@ func (client StravaClient) UpdateActivity(activityId int64, bearerToken string) 
 		return err
 	}
 	defer resp.Body.Close()
-
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("error updating activity, status: %v", resp.StatusCode)
 	}
