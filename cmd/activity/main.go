@@ -33,6 +33,10 @@ type Updates struct {
 	Private    bool   `json:"private"`
 }
 
+type ChallengeResponse struct {
+	HubChallenge string `json:"hub.challenge"`
+}
+
 func main() {
 	lambda.Start(handleNewActivity)
 }
@@ -64,7 +68,9 @@ func handleNewActivity(ctx context.Context, request *events.LambdaFunctionURLReq
 		}
 		if request.QueryStringParameters["hub.mode"] == "subscribe" &&
 			request.QueryStringParameters["hub.verify_token"] == verifyToken {
-			message = request.QueryStringParameters["hub.challenge"]
+			challengeResponse := ChallengeResponse{HubChallenge: request.QueryStringParameters["hub.challenge"]}
+			responseBytes, _ := json.Marshal(challengeResponse)
+			message = string(responseBytes)
 		} else {
 			message = "webhook verification failed"
 			err = errors.New("invalid parameters")
