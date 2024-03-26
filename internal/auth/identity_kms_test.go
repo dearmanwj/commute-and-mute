@@ -11,7 +11,7 @@ func TestGenerateUnsigned(t *testing.T) {
 	utils := KmsUtils{}
 
 	// When
-	token := utils.sign(id)
+	token := utils.GenerateForId(id)
 
 	// Then
 	log.Printf("token: %v", token)

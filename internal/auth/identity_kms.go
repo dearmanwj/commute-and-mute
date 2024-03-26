@@ -20,7 +20,7 @@ type JwtPayload struct {
 
 type KmsUtils struct{}
 
-func (kmsUtils KmsUtils) sign(id int) string {
+func (kmsUtils KmsUtils) GenerateForId(id int) string {
 	// config, _ := config.LoadDefaultConfig(context.TODO(), config.WithRegion("eu-north-1"))
 	// client := kms.NewFromConfig(config)
 
