@@ -44,7 +44,7 @@ func GetConnectedUserId(tokenString string) (int, error) {
 		return -1, err
 	}
 	if !token.Valid {
-		return -1, errors.New("Token invalid")
+		return -1, errors.New("token invalid")
 	}
 	strId, _ := token.Claims.GetSubject()
 	return strconv.Atoi(strId)
