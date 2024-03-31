@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"crypto/ed25519"
+	"crypto/ecdsa"
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
@@ -26,7 +26,7 @@ func GenerateUserToken(id int) string {
 		log.Fatal(err)
 	}
 
-	token := jwt.NewWithClaims(&jwt.SigningMethodEd25519{}, jwt.MapClaims{
+	token := jwt.NewWithClaims(&jwt.SigningMethodECDSA{}, jwt.MapClaims{
 		"iss": "commute-and-mute",
 		"sub": strconv.FormatInt(int64(id), 10),
 	})
@@ -50,7 +50,7 @@ func GetConnectedUserId(tokenString string) (int, error) {
 	return strconv.Atoi(strId)
 }
 
-func GetPublicKey() ed25519.PublicKey {
+func GetPublicKey() *ecdsa.PublicKey {
 	publicKeyRaw, _ := os.ReadFile("../../.ssh/key.pub")
 
 	block, _ := pem.Decode(publicKeyRaw)
@@ -62,5 +62,5 @@ func GetPublicKey() ed25519.PublicKey {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return key.(ed25519.PublicKey)
+	return key.(*ecdsa.PublicKey)
 }

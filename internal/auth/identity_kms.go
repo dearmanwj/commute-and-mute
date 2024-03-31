@@ -2,10 +2,12 @@ package auth
 
 import (
 	"context"
+	"encoding/asn1"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/big"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -53,6 +55,7 @@ func (tokenGenerator TokenGenerator) GenerateForId(ctx context.Context, id int) 
 		KeyId:            &keyId,
 		SigningAlgorithm: types.SigningAlgorithmSpecEcdsaSha256,
 		Message:          []byte(unsignedString),
+		MessageType:      types.MessageTypeRaw,
 	}
 	signOutput, err := tokenGenerator.client.Sign(ctx, &signInput)
 
@@ -60,8 +63,36 @@ func (tokenGenerator TokenGenerator) GenerateForId(ctx context.Context, id int) 
 		log.Panicf("error signing new token: %v", err)
 	}
 
-	signatureB64 := base64.RawURLEncoding.EncodeToString(signOutput.Signature)
+	signatureB64, err := kmsResponseToJwtSignature(signOutput.Signature)
+	if err != nil {
+		log.Panic("could not generate jwt signature", err)
+	}
 
 	signedToken := fmt.Sprintf("%v.%v", unsignedString, signatureB64)
 	return signedToken
+}
+
+func kmsResponseToJwtSignature(sigBytes []byte) (string, error) {
+	var signatureStruct EcdsaSigValue
+	_, err := asn1.Unmarshal(sigBytes, &signatureStruct)
+	if err != nil {
+		return "", err
+	}
+	rBytes := signatureStruct.R.Bytes()
+	rBytesPadded := make([]byte, 32)
+	copy(rBytesPadded[32-len(rBytes):], rBytes)
+
+	sBytes := signatureStruct.S.Bytes()
+	sBytesPadded := make([]byte, 32)
+	copy(sBytesPadded[32-len(sBytes):], sBytes)
+
+	out := append(rBytesPadded, sBytesPadded...)
+	outString := base64.RawURLEncoding.EncodeToString(out)
+
+	return outString, nil
+}
+
+type EcdsaSigValue struct {
+	R *big.Int
+	S *big.Int
 }
