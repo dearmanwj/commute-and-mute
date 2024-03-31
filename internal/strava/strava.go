@@ -49,7 +49,7 @@ type StravaClient struct {
 }
 
 var STRAVA_BASE_URL = "https://www.strava.com"
-var STRAVA_EXCHANGE_PATH = "/oauth/token"
+var STRAVA_EXCHANGE_PATH = "/api/v3/oauth/token"
 var STRAVA_ACTIVITY_PATH = "/api/v3/activities/%v"
 
 func NewStravaClient(baseUrl string) StravaClient {
@@ -94,7 +94,7 @@ func (client StravaClient) makeTokenRequest(token string, grantType string) (Aut
 	queryParams := url.Values{}
 	queryParams.Add("client_id", clientId)
 	queryParams.Add("client_secret", clientSecret)
-	if grantType == "code" {
+	if grantType == "authorization_code" {
 		queryParams.Add("code", token)
 	} else if grantType == "refresh_token" {
 		queryParams.Add("refresh_token", token)
