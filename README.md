@@ -6,7 +6,7 @@ A lambda function to set activity status to commute and mute between home and wo
 
 Run the following to build with linux architecture with expected name:
 
-`GOOS=linux GOARCH=amd64 go build -o bootstrap main.go`
+`GOOS=linux GOARCH=amd64 go build -o bootstrap .`
 
 Zip the `bootstrap` file and upload to aws
 
