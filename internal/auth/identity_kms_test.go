@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"encoding/base64"
 	"strings"
 	"testing"
 
@@ -18,12 +19,13 @@ func (m mockKmsApi) Sign(ctx context.Context, params *kms.SignInput, optFns ...f
 func TestGenerateSigned(t *testing.T) {
 	// Given
 	id := 123
+	mockSignature := []byte("signature")
 	mockKms := mockKmsApi(func(ctx context.Context, params *kms.SignInput, optFns ...func(*kms.Options)) (*kms.SignOutput, error) {
 		if params.SigningAlgorithm != types.SigningAlgorithmSpecEcdsaSha256 {
 			t.Error("incorrect signing algorithm")
 		}
 		output := kms.SignOutput{
-			Signature: []byte("signature"),
+			Signature: mockSignature,
 		}
 		return &output, nil
 	})
@@ -34,8 +36,9 @@ func TestGenerateSigned(t *testing.T) {
 	token := generator.GenerateForId(ctx, id)
 
 	// Then
+	expectedSignature := base64.RawStdEncoding.EncodeToString(mockSignature)
 	tokenParts := strings.Split(token, ".")
-	if tokenParts[2] != "signature" {
+	if tokenParts[2] != expectedSignature {
 		t.Error("incorrect signature")
 	}
 }

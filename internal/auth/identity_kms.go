@@ -60,6 +60,8 @@ func (tokenGenerator TokenGenerator) GenerateForId(ctx context.Context, id int) 
 		log.Panicf("error signing new token: %v", err)
 	}
 
-	signedToken := fmt.Sprintf("%v.%v", unsignedString, string(signOutput.Signature))
+	signatureB64 := base64.RawStdEncoding.EncodeToString(signOutput.Signature)
+
+	signedToken := fmt.Sprintf("%v.%v", unsignedString, signatureB64)
 	return signedToken
 }
