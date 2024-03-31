@@ -63,7 +63,7 @@ func (client StravaClient) ExchangeToken(code string) (AuthorizationResponse, er
 	if code == "" {
 		return AuthorizationResponse{}, errors.New("code is empty")
 	}
-	return client.makeTokenRequest(code, "authorization_code")
+	return client.makeTokenRequest(code, "code")
 }
 
 func (client StravaClient) RefreshToken(refreshToken string) (AuthorizationResponse, error) {
