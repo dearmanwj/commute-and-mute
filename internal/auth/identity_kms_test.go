@@ -36,7 +36,7 @@ func TestGenerateSigned(t *testing.T) {
 	token := generator.GenerateForId(ctx, id)
 
 	// Then
-	expectedSignature := base64.RawStdEncoding.EncodeToString(mockSignature)
+	expectedSignature := base64.RawURLEncoding.EncodeToString(mockSignature)
 	tokenParts := strings.Split(token, ".")
 	if tokenParts[2] != expectedSignature {
 		t.Error("incorrect signature")

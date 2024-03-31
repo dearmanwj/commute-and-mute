@@ -41,11 +41,11 @@ func (tokenGenerator TokenGenerator) GenerateForId(ctx context.Context, id int) 
 
 	header := JwtHeader{Alg: "ES256", Typ: "jwt"}
 	headerBytes, _ := json.Marshal(header)
-	headerBase64 := base64.RawStdEncoding.EncodeToString(headerBytes)
+	headerBase64 := base64.RawURLEncoding.EncodeToString(headerBytes)
 
 	payload := JwtPayload{Sub: id, Iss: "commute-and-mute", Exp: int(now.Add(time.Hour).Unix())}
 	payloadBytes, _ := json.Marshal(payload)
-	payloadBase64 := base64.RawStdEncoding.EncodeToString(payloadBytes)
+	payloadBase64 := base64.RawURLEncoding.EncodeToString(payloadBytes)
 
 	unsignedString := fmt.Sprintf("%v.%v", headerBase64, payloadBase64)
 	keyId := "ddd8b1bf-b47b-4a62-8ea2-108df35a9f12"
@@ -60,7 +60,7 @@ func (tokenGenerator TokenGenerator) GenerateForId(ctx context.Context, id int) 
 		log.Panicf("error signing new token: %v", err)
 	}
 
-	signatureB64 := base64.RawStdEncoding.EncodeToString(signOutput.Signature)
+	signatureB64 := base64.RawURLEncoding.EncodeToString(signOutput.Signature)
 
 	signedToken := fmt.Sprintf("%v.%v", unsignedString, signatureB64)
 	return signedToken
