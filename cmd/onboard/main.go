@@ -3,11 +3,13 @@ package main
 import (
 	"context"
 	"log"
+	"willd/commute-and-mute/internal/auth"
 	"willd/commute-and-mute/internal/strava"
 	"willd/commute-and-mute/internal/users"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go-v2/config"
 )
 
 type ExchangeTokenResponse = struct {
@@ -25,19 +27,27 @@ func main() {
 
 func HandleTokenExchange(context context.Context, request *events.LambdaFunctionURLRequest) (ExchangeTokenResponse, error) {
 	code := request.QueryStringParameters["code"]
+	config, err := config.LoadDefaultConfig(context, config.WithRegion("eu-north-1"))
+	if err != nil {
+		log.Panicf("Error getting aws config: %v\n", err)
+
+	}
 	users.GetDbConnection(context)
 	stravaClient := strava.NewStravaClient(strava.STRAVA_BASE_URL)
-	auth, err := stravaClient.ExchangeToken(code)
+	authResponse, err := stravaClient.ExchangeToken(code)
 
 	if err != nil {
 		return ExchangeTokenResponse{}, err
 	}
 
-	user := auth.ToUser()
+	user := authResponse.ToUser()
 
 	log.Printf("user: %v", user)
 
 	users.UpdateUser(context, user)
+
+	generator := auth.NewTokenGenerator(config)
+	token := generator.GenerateForId(context, user.ID)
 
 	return ExchangeTokenResponse{
 		user.ID,
@@ -45,6 +55,6 @@ func HandleTokenExchange(context context.Context, request *events.LambdaFunction
 		user.HomeLng,
 		user.WorkLat,
 		user.WorkLng,
-		"",
+		token,
 	}, nil
 }

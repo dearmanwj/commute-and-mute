@@ -32,7 +32,7 @@ type KmsApi interface {
 	Sign(ctx context.Context, params *kms.SignInput, optFns ...func(*kms.Options)) (*kms.SignOutput, error)
 }
 
-func NewKmsUtils(config aws.Config) TokenGenerator {
+func NewTokenGenerator(config aws.Config) TokenGenerator {
 	return TokenGenerator{client: kms.NewFromConfig(config)}
 }
 
