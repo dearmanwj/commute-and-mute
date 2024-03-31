@@ -1,10 +1,16 @@
 package auth
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"log"
 	"time"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kms"
+	"github.com/aws/aws-sdk-go-v2/service/kms/types"
 )
 
 type JwtHeader struct {
@@ -18,12 +24,19 @@ type JwtPayload struct {
 	Exp int    `json:"exp"`
 }
 
-type KmsUtils struct{}
+type KmsUtils struct {
+	client KmsApi
+}
 
-func (kmsUtils KmsUtils) GenerateForId(id int) string {
-	// config, _ := config.LoadDefaultConfig(context.TODO(), config.WithRegion("eu-north-1"))
-	// client := kms.NewFromConfig(config)
+type KmsApi interface {
+	Sign(ctx context.Context, params *kms.SignInput, optFns ...func(*kms.Options)) (*kms.SignOutput, error)
+}
 
+func NewKmsUtils(config aws.Config) KmsUtils {
+	return KmsUtils{client: kms.NewFromConfig(config)}
+}
+
+func (kmsUtils KmsUtils) GenerateForId(ctx context.Context, id int) string {
 	now := time.Now()
 
 	header := JwtHeader{Alg: "ES256", Typ: "jwt"}
@@ -35,7 +48,18 @@ func (kmsUtils KmsUtils) GenerateForId(id int) string {
 	payloadBase64 := base64.RawStdEncoding.EncodeToString(payloadBytes)
 
 	unsignedString := fmt.Sprintf("%v.%v", headerBase64, payloadBase64)
+	keyId := "ddd8b1bf-b47b-4a62-8ea2-108df35a9f12"
+	signInput := kms.SignInput{
+		KeyId:            &keyId,
+		SigningAlgorithm: types.SigningAlgorithmSpecEcdsaSha256,
+		Message:          []byte(unsignedString),
+	}
+	signOutput, err := kmsUtils.client.Sign(ctx, &signInput)
 
-	return unsignedString
+	if err != nil {
+		log.Panicf("error signing new token: %v", err)
+	}
 
+	signedToken := fmt.Sprintf("%v.%v", unsignedString, string(signOutput.Signature))
+	return signedToken
 }
