@@ -24,7 +24,7 @@ type JwtPayload struct {
 	Exp int    `json:"exp"`
 }
 
-type KmsUtils struct {
+type TokenGenerator struct {
 	client KmsApi
 }
 
@@ -32,11 +32,11 @@ type KmsApi interface {
 	Sign(ctx context.Context, params *kms.SignInput, optFns ...func(*kms.Options)) (*kms.SignOutput, error)
 }
 
-func NewKmsUtils(config aws.Config) KmsUtils {
-	return KmsUtils{client: kms.NewFromConfig(config)}
+func NewKmsUtils(config aws.Config) TokenGenerator {
+	return TokenGenerator{client: kms.NewFromConfig(config)}
 }
 
-func (kmsUtils KmsUtils) GenerateForId(ctx context.Context, id int) string {
+func (tokenGenerator TokenGenerator) GenerateForId(ctx context.Context, id int) string {
 	now := time.Now()
 
 	header := JwtHeader{Alg: "ES256", Typ: "jwt"}
@@ -54,7 +54,7 @@ func (kmsUtils KmsUtils) GenerateForId(ctx context.Context, id int) string {
 		SigningAlgorithm: types.SigningAlgorithmSpecEcdsaSha256,
 		Message:          []byte(unsignedString),
 	}
-	signOutput, err := kmsUtils.client.Sign(ctx, &signInput)
+	signOutput, err := tokenGenerator.client.Sign(ctx, &signInput)
 
 	if err != nil {
 		log.Panicf("error signing new token: %v", err)

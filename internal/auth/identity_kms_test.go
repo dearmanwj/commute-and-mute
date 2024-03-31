@@ -27,11 +27,11 @@ func TestGenerateSigned(t *testing.T) {
 		}
 		return &output, nil
 	})
-	utils := KmsUtils{client: mockKms}
+	generator := TokenGenerator{client: mockKms}
 	ctx := context.Background()
 
 	// When
-	token := utils.GenerateForId(ctx, id)
+	token := generator.GenerateForId(ctx, id)
 
 	// Then
 	tokenParts := strings.Split(token, ".")

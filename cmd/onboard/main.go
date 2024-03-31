@@ -38,6 +38,7 @@ func HandleTokenExchange(context context.Context, request *events.LambdaFunction
 	log.Printf("user: %v", user)
 
 	users.UpdateUser(context, user)
+
 	return ExchangeTokenResponse{
 		user.ID,
 		user.HomeLat,
