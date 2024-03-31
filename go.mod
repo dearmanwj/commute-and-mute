@@ -8,8 +8,6 @@ require (
 	googlemaps.github.io/maps v1.7.0
 )
 
-require github.com/aws/aws-sdk-go-v2/service/kms v1.29.1 // indirect
-
 require (
 	github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.18.7 // indirect
 	github.com/golang-jwt/jwt/v5 v5.2.0
