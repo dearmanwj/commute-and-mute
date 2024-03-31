@@ -24,7 +24,7 @@ func main() {
 }
 
 func HandleUserUpdate(context context.Context, request *events.LambdaFunctionURLRequest) error {
-	users.GetDbConnection()
+	users.GetDbConnection(context)
 	log.Println("Updating user with home and work locations")
 	authHeader := request.Headers["Authorization"]
 	token := strings.Split(authHeader, "Bearer ")[1]
@@ -34,13 +34,13 @@ func HandleUserUpdate(context context.Context, request *events.LambdaFunctionURL
 	}
 	var formData UserFormData
 	json.Unmarshal([]byte(request.Body), &formData)
-	HandleUserSubmitDetails(id, formData.HomeLat, formData.HomeLng, formData.WorkLat, formData.WorkLng)
+	HandleUserSubmitDetails(context, id, formData.HomeLat, formData.HomeLng, formData.WorkLat, formData.WorkLng)
 	return nil
 }
 
-func HandleUserSubmitDetails(id int, hlat float64, hlng float64, wlat float64, wlng float64) error {
+func HandleUserSubmitDetails(ctx context.Context, id int, hlat float64, hlng float64, wlat float64, wlng float64) error {
 
-	user, err := users.GetUser(id)
+	user, err := users.GetUser(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -50,7 +50,7 @@ func HandleUserSubmitDetails(id int, hlat float64, hlng float64, wlat float64, w
 	user.WorkLat = wlat
 	user.WorkLng = wlng
 
-	err = users.UpdateUser(user)
+	err = users.UpdateUser(ctx, user)
 	if err != nil {
 		return err
 	}

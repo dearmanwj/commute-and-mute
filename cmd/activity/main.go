@@ -51,7 +51,7 @@ func handleNewActivity(ctx context.Context, request *events.LambdaFunctionURLReq
 		}
 		log.Printf("handling update event: %v", update)
 		if update.ObjectType == "activity" && update.AspectType == "create" {
-			err = ProcessActivity(update)
+			err = ProcessActivity(ctx, update)
 			if err != nil {
 				message = "error processing activity"
 			} else {
@@ -91,7 +91,7 @@ func DecodeUpdateEvent(rawEvent string) (StravaEvent, error) {
 	return update, nil
 }
 
-func GetBearerToken(user users.User, stravaClient *strava.StravaClient) string {
+func GetBearerToken(ctx context.Context, user users.User, stravaClient *strava.StravaClient) string {
 	if user.ExpiresAt < time.Now().Unix() {
 		log.Println("Token expired, refreshing")
 		authResponse, err := stravaClient.RefreshToken(user.RefreshToken)
@@ -100,22 +100,22 @@ func GetBearerToken(user users.User, stravaClient *strava.StravaClient) string {
 		}
 		user.AccessToken = authResponse.Access_Token
 		user.ExpiresAt = authResponse.Expires_At
-		users.UpdateUser(user)
+		users.UpdateUser(ctx, user)
 	}
 
 	return user.AccessToken
 }
 
-func ProcessActivity(update StravaEvent) (err error) {
-	users.GetDbConnection()
-	user, err := users.GetUser(int(update.OwnerId))
+func ProcessActivity(ctx context.Context, update StravaEvent) (err error) {
+	users.GetDbConnection(ctx)
+	user, err := users.GetUser(ctx, int(update.OwnerId))
 	if err != nil || user.ID == 0 {
 		return fmt.Errorf("error retrieving user with id: %v, %v", update.OwnerId, err)
 	}
 
 	stravaClient := strava.NewStravaClient(strava.STRAVA_BASE_URL)
 
-	token := GetBearerToken(user, &stravaClient)
+	token := GetBearerToken(ctx, user, &stravaClient)
 
 	newActivity, err := stravaClient.GetActivity(update.ObjectId, token)
 	if err != nil {

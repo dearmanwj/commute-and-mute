@@ -30,7 +30,7 @@ type TableBasics struct {
 	TableName      string
 }
 
-func UpdateUser(user User) error {
+func UpdateUser(ctx context.Context, user User) error {
 
 	item, err := attributevalue.MarshalMap(user)
 
@@ -38,7 +38,7 @@ func UpdateUser(user User) error {
 		panic(err)
 	}
 
-	_, err = DB.DynamoDbClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+	_, err = DB.DynamoDbClient.PutItem(ctx, &dynamodb.PutItemInput{
 		Item: item, TableName: aws.String(DB.TableName),
 	},
 	)
@@ -49,7 +49,7 @@ func UpdateUser(user User) error {
 	return err
 }
 
-func GetUser(id int) (User, error) {
+func GetUser(ctx context.Context, id int) (User, error) {
 	val, err := attributevalue.Marshal(id)
 	if err != nil {
 		panic(err)
@@ -58,7 +58,7 @@ func GetUser(id int) (User, error) {
 
 	var user User
 
-	response, err := DB.DynamoDbClient.GetItem(context.TODO(), &dynamodb.GetItemInput{Key: key, TableName: aws.String(DB.TableName)})
+	response, err := DB.DynamoDbClient.GetItem(ctx, &dynamodb.GetItemInput{Key: key, TableName: aws.String(DB.TableName)})
 	if err != nil {
 		log.Printf("Error getting user: %v,\n", err)
 		return user, err
@@ -74,9 +74,9 @@ func GetUser(id int) (User, error) {
 	return user, nil
 }
 
-func GetDbConnection() error {
+func GetDbConnection(ctx context.Context) error {
 	tableName := os.Getenv("USERS_TABLE_NAME")
-	config, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("eu-north-1"))
+	config, err := config.LoadDefaultConfig(ctx, config.WithRegion("eu-north-1"))
 	if err != nil {
 		log.Printf("Error getting db connection: %v\n", err)
 		return err
