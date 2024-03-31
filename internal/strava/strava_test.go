@@ -15,7 +15,7 @@ func TestExchangeToken(t *testing.T) {
 		if r.URL.Query().Get("code") != code {
 			t.Error("code not in query params")
 		}
-		if r.URL.Query().Get("grant_type") != "code" {
+		if r.URL.Query().Get("grant_type") != "authorization_code" {
 			t.Error("grant type not correct")
 		}
 
