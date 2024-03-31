@@ -10,26 +10,27 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
-type UserInfo = struct {
+type ExchangeTokenResponse = struct {
 	ID      int
 	HomeLat float64
 	HomeLng float64
 	WorkLat float64
 	WorkLng float64
+	Token   string
 }
 
 func main() {
 	lambda.Start(HandleTokenExchange)
 }
 
-func HandleTokenExchange(context context.Context, request *events.LambdaFunctionURLRequest) (UserInfo, error) {
+func HandleTokenExchange(context context.Context, request *events.LambdaFunctionURLRequest) (ExchangeTokenResponse, error) {
 	code := request.QueryStringParameters["code"]
 	users.GetDbConnection()
 	stravaClient := strava.NewStravaClient(strava.STRAVA_BASE_URL)
 	auth, err := stravaClient.ExchangeToken(code)
 
 	if err != nil {
-		return UserInfo{}, err
+		return ExchangeTokenResponse{}, err
 	}
 
 	user := auth.ToUser()
@@ -37,11 +38,12 @@ func HandleTokenExchange(context context.Context, request *events.LambdaFunction
 	log.Printf("user: %v", user)
 
 	users.UpdateUser(user)
-	return UserInfo{
+	return ExchangeTokenResponse{
 		user.ID,
 		user.HomeLat,
 		user.HomeLng,
 		user.WorkLat,
 		user.WorkLng,
+		"",
 	}, nil
 }
