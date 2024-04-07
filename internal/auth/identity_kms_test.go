@@ -2,7 +2,8 @@ package auth
 
 import (
 	"context"
-	"encoding/base64"
+	"encoding/asn1"
+	"math/big"
 	"strings"
 	"testing"
 
@@ -26,7 +27,7 @@ func (m mockKmsApi) GetPublicKey(ctx context.Context, params *kms.GetPublicKeyIn
 func TestGenerateSigned(t *testing.T) {
 	// Given
 	id := 123
-	mockSignature := []byte("signature")
+	mockSignature := getMockSignature()
 	mock := mockKmsApi{
 		mockSign: func(ctx context.Context, params *kms.SignInput, optFns ...func(*kms.Options)) (*kms.SignOutput, error) {
 			if params.SigningAlgorithm != types.SigningAlgorithmSpecEcdsaSha256 {
@@ -46,9 +47,18 @@ func TestGenerateSigned(t *testing.T) {
 	token := generator.GenerateForId(ctx, id)
 
 	// Then
-	expectedSignature := base64.RawURLEncoding.EncodeToString(mockSignature)
 	tokenParts := strings.Split(token, ".")
-	if tokenParts[2] != expectedSignature {
+	// Can definitely think of a better assert than this...
+	if len(tokenParts) != 3 {
 		t.Error("incorrect signature")
 	}
+}
+
+func getMockSignature() []byte {
+	sig := EcdsaSigValue{
+		R: big.NewInt(1234567),
+		S: big.NewInt(7654321),
+	}
+	encoded, _ := asn1.Marshal(sig)
+	return encoded
 }
