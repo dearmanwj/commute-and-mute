@@ -13,12 +13,12 @@ import (
 )
 
 type ExchangeTokenResponse = struct {
-	ID      int
-	HomeLat float64
-	HomeLng float64
-	WorkLat float64
-	WorkLng float64
-	Token   string
+	ID      int     `json:"id"`
+	HomeLat float64 `json:"hlat"`
+	HomeLng float64 `json:"hlng"`
+	WorkLat float64 `json:"wlat"`
+	WorkLng float64 `json:"wlng"`
+	Token   string  `json:"token"`
 }
 
 func main() {
