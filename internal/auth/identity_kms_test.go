@@ -69,7 +69,7 @@ func TestValidateToken(t *testing.T) {
 		},
 	}
 
-	token := "eyJhbGciOiJFUzI1NiIsInR5cCI6Imp3dCJ9.eyJzdWIiOjEwNTAzODEyLCJpc3MiOiJjb21tdXRlLWFuZC1tdXRlIiwiZXhwIjoxNzEyNTk5ODI5fQ.p5srwusF05SV_F7Z7p-NTlKJCafL7lYBHNmJ0DeNwyt_0aXXlV6COdI2O6eCs06ZmldyaCYPhc5Uc47jXNtlhA"
+	token := "eyJhbGciOiJFUzI1NiIsInR5cCI6Imp3dCJ9.eyJzdWIiOiIxMDUwMzgxMiIsImlzcyI6ImNvbW11dGUtYW5kLW11dGUiLCJleHAiOjE3MTI2MDM3NDJ9.K_UlrCKa_SKrWVDTAfvOtZPGIct2BHCHHVO_T4OihQTvA6R2-_-3qsB4bMdrPghkrl4kM4p-0Lgc6vZ29Btrtg"
 
 	generator := TokenGenerator{
 		client: mock,
