@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log"
 	"strings"
 	"willd/commute-and-mute/internal/auth"
@@ -12,7 +13,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
-type UserFormData struct {
+type UserResource struct {
 	HomeLat float64 `json:"hlat"`
 	HomeLng float64 `json:"hlng"`
 	WorkLat float64 `json:"wlat"`
@@ -20,7 +21,28 @@ type UserFormData struct {
 }
 
 func main() {
-	lambda.Start(HandleUserUpdate)
+	lambda.Start(HandleUserRequest)
+}
+
+func HandleUserRequest(context context.Context, request *events.APIGatewayProxyRequest) (UserResource, error) {
+	switch request.HTTPMethod {
+	case "GET":
+		return UserResource{
+			HomeLat: 1.1,
+			HomeLng: 1.2,
+			WorkLat: 1.2,
+			WorkLng: 1.3,
+		}, nil
+	case "PUT":
+		return UserResource{
+			HomeLat: 2.1,
+			HomeLng: 2.2,
+			WorkLat: 2.2,
+			WorkLng: 2.3,
+		}, nil
+	default:
+		return UserResource{}, errors.New("unsupported method")
+	}
 }
 
 func HandleUserUpdate(context context.Context, request *events.LambdaFunctionURLRequest) error {
