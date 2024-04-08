@@ -30,6 +30,8 @@ type JwtPayload struct {
 	Exp int    `json:"exp"`
 }
 
+var timeNow = time.Now
+
 type TokenGenerator struct {
 	client KmsApi
 }
@@ -44,7 +46,7 @@ func NewTokenGenerator(config aws.Config) TokenGenerator {
 }
 
 func (tokenGenerator TokenGenerator) GenerateForId(ctx context.Context, id int) string {
-	now := time.Now()
+	now := timeNow()
 
 	header := JwtHeader{Alg: "ES256", Typ: "jwt"}
 	headerBytes, _ := json.Marshal(header)
@@ -79,10 +81,9 @@ func (tokenGenerator TokenGenerator) GenerateForId(ctx context.Context, id int) 
 }
 
 func (tokenGenerator TokenGenerator) Validate(ctx context.Context, tokenString string) (int, error) {
-
 	tokenJwt, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
 		return tokenGenerator.getPublicKey(ctx)
-	})
+	}, jwt.WithValidMethods([]string{"ES256"}), jwt.WithExpirationRequired())
 
 	if err != nil {
 		return -1, fmt.Errorf("could not validate token: %w", err)
