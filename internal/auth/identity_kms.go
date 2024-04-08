@@ -25,7 +25,7 @@ type JwtHeader struct {
 }
 
 type JwtPayload struct {
-	Sub int    `json:"sub"`
+	Sub string `json:"sub"`
 	Iss string `json:"iss"`
 	Exp int    `json:"exp"`
 }
@@ -50,7 +50,8 @@ func (tokenGenerator TokenGenerator) GenerateForId(ctx context.Context, id int) 
 	headerBytes, _ := json.Marshal(header)
 	headerBase64 := base64.RawURLEncoding.EncodeToString(headerBytes)
 
-	payload := JwtPayload{Sub: id, Iss: "commute-and-mute", Exp: int(now.Add(time.Hour).Unix())}
+	idString := strconv.Itoa(id)
+	payload := JwtPayload{Sub: idString, Iss: "commute-and-mute", Exp: int(now.Add(time.Hour).Unix())}
 	payloadBytes, _ := json.Marshal(payload)
 	payloadBase64 := base64.RawURLEncoding.EncodeToString(payloadBytes)
 
