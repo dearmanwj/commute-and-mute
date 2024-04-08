@@ -77,7 +77,7 @@ func TestValidateToken(t *testing.T) {
 	ctx := context.Background()
 
 	// When
-	result, err := generator.Validate(ctx, token)
+	result, err := generator.GetIdIfValid(ctx, token)
 
 	// Then
 	if err != nil {

@@ -80,7 +80,7 @@ func (tokenGenerator TokenGenerator) GenerateForId(ctx context.Context, id int) 
 	return signedToken
 }
 
-func (tokenGenerator TokenGenerator) Validate(ctx context.Context, tokenString string) (int, error) {
+func (tokenGenerator TokenGenerator) GetIdIfValid(ctx context.Context, tokenString string) (int, error) {
 	tokenJwt, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
 		return tokenGenerator.getPublicKey(ctx)
 	}, jwt.WithValidMethods([]string{"ES256"}), jwt.WithExpirationRequired())
