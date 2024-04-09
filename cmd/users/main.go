@@ -24,8 +24,9 @@ func main() {
 	lambda.Start(HandleUserRequest)
 }
 
-func HandleUserRequest(context context.Context, request *events.APIGatewayProxyRequest) (UserResource, error) {
-	switch request.HTTPMethod {
+func HandleUserRequest(context events.APIGatewayV2HTTPRequestContext, request *events.APIGatewayV2HTTPRequest) (UserResource, error) {
+	method := context.HTTP.Method
+	switch method {
 	case "GET":
 		return UserResource{
 			HomeLat: 1.1,
@@ -54,7 +55,7 @@ func HandleUserUpdate(context context.Context, request *events.LambdaFunctionURL
 	if err != nil {
 		log.Panicln(err)
 	}
-	var formData UserFormData
+	var formData UserResource
 	json.Unmarshal([]byte(request.Body), &formData)
 	HandleUserSubmitDetails(context, id, formData.HomeLat, formData.HomeLng, formData.WorkLat, formData.WorkLng)
 	return nil
