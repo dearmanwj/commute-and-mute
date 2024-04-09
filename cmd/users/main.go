@@ -24,8 +24,8 @@ func main() {
 	lambda.Start(HandleUserRequest)
 }
 
-func HandleUserRequest(context events.APIGatewayV2HTTPRequestContext, request *events.APIGatewayV2HTTPRequest) (UserResource, error) {
-	method := context.HTTP.Method
+func HandleUserRequest(context context.Context, request *events.APIGatewayV2HTTPRequest) (UserResource, error) {
+	method := request.RequestContext.HTTP.Method
 	switch method {
 	case "GET":
 		return UserResource{
