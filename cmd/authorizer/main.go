@@ -18,6 +18,8 @@ func main() {
 
 func HandleAuth(context context.Context, request events.APIGatewayCustomAuthorizerRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
 
+	log.Printf("received authorization request for %v", request.MethodArn)
+
 	config, err := config.LoadDefaultConfig(context, config.WithRegion("eu-north-1"))
 	if err != nil {
 		log.Panicf("Error getting aws config: %v\n", err)
