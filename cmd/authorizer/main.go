@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"log"
 	"strconv"
 	"willd/commute-and-mute/internal/auth"
@@ -31,20 +31,28 @@ func HandleAuth(context context.Context, request events.APIGatewayCustomAuthoriz
 
 	id, err := generator.GetIdIfValid(context, token)
 	if err != nil {
-		return events.APIGatewayCustomAuthorizerResponse{}, fmt.Errorf("unauthorized, %w", err)
+		log.Printf("error authorizing user: %v", err)
+		return events.APIGatewayCustomAuthorizerResponse{}, errors.New("Unauthorized")
 	} else {
+		log.Println("token valid")
 		return events.APIGatewayCustomAuthorizerResponse{
 			PrincipalID:    strconv.Itoa(id),
-			PolicyDocument: generatePolicy(request.MethodArn),
+			PolicyDocument: generatePolicy(request.MethodArn, true),
 		}, nil
 	}
 
 }
 
-func generatePolicy(resource string) events.APIGatewayCustomAuthorizerPolicy {
+func generatePolicy(resource string, allow bool) events.APIGatewayCustomAuthorizerPolicy {
+	var effect string
+	if allow {
+		effect = "Allow"
+	} else {
+		effect = "Deny"
+	}
 	statement := events.IAMPolicyStatement{
 		Action:   []string{"execute-api:Invoke"},
-		Effect:   "Allow",
+		Effect:   effect,
 		Resource: []string{resource},
 	}
 	return events.APIGatewayCustomAuthorizerPolicy{
