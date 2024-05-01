@@ -30,3 +30,8 @@ creds/
 
 # Keys for signing jwt
 .ssh/
+
+# Terraform files
+.terraform
+terraform.tfstate
+terraform.tfstate.backup
