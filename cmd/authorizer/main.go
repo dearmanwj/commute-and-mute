@@ -15,16 +15,16 @@ func main() {
 	lambda.Start(HandleAuth)
 }
 
-func HandleAuth(context context.Context, request events.APIGatewayCustomAuthorizerRequest) (events.APIGatewayV2CustomAuthorizerSimpleResponse, error) {
+func HandleAuth(context context.Context, request events.APIGatewayV2CustomAuthorizerV2Request) (events.APIGatewayV2CustomAuthorizerSimpleResponse, error) {
 
-	log.Printf("received authorization request for %v", request.MethodArn)
+	log.Printf("received authorization request for %v", request.RouteArn)
 
 	config, err := config.LoadDefaultConfig(context, config.WithRegion("eu-north-1"))
 	if err != nil {
 		log.Panicf("Error getting aws config: %v\n", err)
 	}
 
-	token := request.AuthorizationToken
+	token := request.Headers["Authorization"]
 
 	generator := auth.NewTokenGenerator(config)
 
