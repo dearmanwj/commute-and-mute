@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"log"
-	"strconv"
 	"willd/commute-and-mute/internal/auth"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -16,7 +15,7 @@ func main() {
 	lambda.Start(HandleAuth)
 }
 
-func HandleAuth(context context.Context, request events.APIGatewayCustomAuthorizerRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
+func HandleAuth(context context.Context, request events.APIGatewayCustomAuthorizerRequest) (events.APIGatewayV2CustomAuthorizerSimpleResponse, error) {
 
 	log.Printf("received authorization request for %v", request.MethodArn)
 
@@ -32,30 +31,19 @@ func HandleAuth(context context.Context, request events.APIGatewayCustomAuthoriz
 	id, err := generator.GetIdIfValid(context, token)
 	if err != nil {
 		log.Printf("error authorizing user: %v", err)
-		return events.APIGatewayCustomAuthorizerResponse{}, errors.New("Unauthorized")
+		unauthorizedResponse := events.APIGatewayV2CustomAuthorizerSimpleResponse{
+			IsAuthorized: false,
+			Context:      make(map[string]interface{}),
+		}
+		return unauthorizedResponse, errors.New("Unauthorized")
 	} else {
 		log.Println("token valid")
-		return events.APIGatewayCustomAuthorizerResponse{
-			PrincipalID:    strconv.Itoa(id),
-			PolicyDocument: generatePolicy(request.MethodArn, true),
-		}, nil
+		authorizedContext := map[string]interface{}{"user": id}
+		authorizedResponse := events.APIGatewayV2CustomAuthorizerSimpleResponse{
+			IsAuthorized: true,
+			Context:      authorizedContext,
+		}
+		return authorizedResponse, nil
 	}
 
-}
-
-func generatePolicy(resource string, allow bool) events.APIGatewayCustomAuthorizerPolicy {
-	var effect string
-	if allow {
-		effect = "Allow"
-	} else {
-		effect = "Deny"
-	}
-	statement := events.IAMPolicyStatement{
-		Action:   []string{"execute-api:Invoke"},
-		Effect:   effect,
-		Resource: []string{resource},
-	}
-	return events.APIGatewayCustomAuthorizerPolicy{
-		Statement: []events.IAMPolicyStatement{statement},
-	}
 }
