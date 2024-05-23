@@ -1,33 +1,16 @@
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    effect = "Allow"
-
-    principals {
-      type        = "Service"
-      identifiers = ["lambda.amazonaws.com"]
-    }
-
-    actions = ["sts:AssumeRole"]
-  }
-}
-
-resource "aws_iam_role" "iam_for_lambda" {
-  name               = "iam_for_lambda"
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
 data "archive_file" "lambda" {
   type        = "zip"
   source_file = "cmd/activity/bootstrap"
   output_path = "cmd/activity/bootstrap.zip"
 }
 
-resource "aws_lambda_function" "test_lambda" {
+resource "aws_lambda_function" "activity_lambda" {
   # If the file is not in the current working directory you will need to include a
   # path.module in the filename.
   filename      = "${path.module}/cmd/activity/bootstrap.zip"
-  function_name = "commute-and-mute-lambda"
+  function_name = "cam-activity"
   role          = aws_iam_role.iam_for_lambda.arn
+  handler = "hello.handler"
 
   source_code_hash = data.archive_file.lambda.output_base64sha256
 
@@ -40,4 +23,9 @@ resource "aws_lambda_function" "test_lambda" {
       WEBHOOK_VERIFY_TOKEN = "KPHo87W@PLVCZs"
     }
   }
+}
+
+resource "aws_lambda_function_url" "activity" {
+  function_name      = aws_lambda_function.activity_lambda.function_name
+  authorization_type = "NONE"
 }
