@@ -29,3 +29,9 @@ resource "aws_lambda_function_url" "activity" {
   function_name      = aws_lambda_function.activity_lambda.function_name
   authorization_type = "NONE"
 }
+
+// create log group in cloudwatch to gather logs of our lambda function
+resource "aws_cloudwatch_log_group" "log_group" {
+  name              = "/aws/lambda/${aws_lambda_function.activity_lambda.function_name}"
+  retention_in_days = 1
+}
