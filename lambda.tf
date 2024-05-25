@@ -19,7 +19,7 @@ resource "aws_lambda_function" "activity_lambda" {
   environment {
     variables = {
       STRAVA_CLIENT_SECRET = "80580d66c7d4514ecf1f904f9a698fb314b2463a"
-      USERS_TABLE_NAME = "commute-and-mute-users"
+      USERS_TABLE_NAME = aws_dynamodb_table.cam-users.name
       WEBHOOK_VERIFY_TOKEN = "KPHo87W@PLVCZs"
     }
   }

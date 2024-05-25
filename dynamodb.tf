@@ -10,8 +10,4 @@ resource "aws_dynamodb_table" "cam-users" {
     type = "N"
   }
 
-  ttl {
-    attribute_name = "TimeToExist"
-    enabled        = false
-  }
 }
