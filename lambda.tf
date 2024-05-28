@@ -35,7 +35,7 @@ resource "aws_lambda_function_url" "activity" {
 }
 
 resource "aws_cloudwatch_log_group" "activity" {
-  name              = "/aws/activity_lambda/${aws_lambda_function.activity_lambda.function_name}"
+  name              = "/aws/lambda/${aws_lambda_function.activity_lambda.function_name}"
   retention_in_days = 1
 }
 
@@ -70,6 +70,6 @@ resource "aws_lambda_function_url" "onboard" {
 }
 
 resource "aws_cloudwatch_log_group" "onboard" {
-  name              = "/aws/onboard_lambda/${aws_lambda_function.onboard_lambda.function_name}"
+  name              = "/aws/lambda/${aws_lambda_function.onboard_lambda.function_name}"
   retention_in_days = 1
 }
