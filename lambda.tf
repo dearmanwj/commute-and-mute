@@ -60,6 +60,7 @@ resource "aws_lambda_function" "onboard_lambda" {
     variables = {
       STRAVA_CLIENT_SECRET = local.strava_secret
       USERS_TABLE_NAME = aws_dynamodb_table.cam-users.name
+      KMS_CAM_KEY_ID = aws_kms_key.cam_idp.key_id
     }
   }
 }

@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"log"
 	"math/big"
+	"os"
 	"strconv"
 	"time"
 
@@ -58,7 +59,7 @@ func (tokenGenerator TokenGenerator) GenerateForId(ctx context.Context, id int) 
 	payloadBase64 := base64.RawURLEncoding.EncodeToString(payloadBytes)
 
 	unsignedString := fmt.Sprintf("%v.%v", headerBase64, payloadBase64)
-	keyId := "ddd8b1bf-b47b-4a62-8ea2-108df35a9f12"
+	keyId := os.Getenv("KMS_CAM_KEY_ID")
 	signInput := kms.SignInput{
 		KeyId:            &keyId,
 		SigningAlgorithm: types.SigningAlgorithmSpecEcdsaSha256,
@@ -101,7 +102,7 @@ func (tokenGenerator TokenGenerator) GetIdIfValid(ctx context.Context, tokenStri
 }
 
 func (tokenGenerator TokenGenerator) getPublicKey(ctx context.Context) (*ecdsa.PublicKey, error) {
-	keyId := "ddd8b1bf-b47b-4a62-8ea2-108df35a9f12"
+	keyId := os.Getenv("KMS_CAM_KEY_ID")
 	input := kms.GetPublicKeyInput{
 		KeyId:       &keyId,
 		GrantTokens: []string{},
