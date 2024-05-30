@@ -74,3 +74,32 @@ resource "aws_cloudwatch_log_group" "onboard" {
   name              = "/aws/lambda/${aws_lambda_function.onboard_lambda.function_name}"
   retention_in_days = 1
 }
+
+## Users lambda
+data "archive_file" "users_lambda" {
+  type        = "zip"
+  source_file = "cmd/users/bootstrap"
+  output_path = "cmd/users/bootstrap.zip"
+}
+
+resource "aws_lambda_function" "users_lambda" {
+  filename      = "${path.module}/cmd/users/bootstrap.zip"
+  function_name = "cam-users"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler = "hello.handler"
+
+  source_code_hash = data.archive_file.users_lambda.output_base64sha256
+
+  runtime = "provided.al2023"
+
+  environment {
+    variables = {
+      USERS_TABLE_NAME = aws_dynamodb_table.cam-users.name
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_group" "users" {
+  name              = "/aws/lambda/${aws_lambda_function.users_lambda.function_name}"
+  retention_in_days = 1
+}
