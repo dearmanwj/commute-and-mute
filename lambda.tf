@@ -103,3 +103,10 @@ resource "aws_cloudwatch_log_group" "users" {
   name              = "/aws/lambda/${aws_lambda_function.users_lambda.function_name}"
   retention_in_days = 1
 }
+
+resource "aws_lambda_permission" "api_invoke_lambda" {
+  principal = "apigateway.amazonaws.com"
+  action = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.users_lambda.arn
+  source_arn = "${aws_apigatewayv2_api.cam_users_api.arn}/*/*/users"
+}
