@@ -24,7 +24,7 @@ func HandleAuth(context context.Context, request events.APIGatewayV2CustomAuthor
 		log.Panicf("Error getting aws config: %v\n", err)
 	}
 
-	token := request.Headers["Authorization"]
+	token := request.IdentitySource[0]
 
 	generator := auth.NewTokenGenerator(config)
 
