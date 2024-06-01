@@ -139,5 +139,5 @@ resource "aws_lambda_permission" "authorizer_invoke_lambda" {
   principal = "apigateway.amazonaws.com"
   action = "lambda:InvokeFunction"
   function_name = aws_lambda_function.authorizer_lambda.arn
-  source_arn = "${aws_apigatewayv2_api.cam_users_api.arn}/*/*/users"
+  source_arn = "${aws_apigatewayv2_api.cam_users_api.execution_arn}/authorizers/${aws_apigatewayv2_authorizer.api.id}"
 }

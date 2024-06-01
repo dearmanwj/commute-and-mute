@@ -47,4 +47,5 @@ resource "aws_apigatewayv2_authorizer" "api" {
   identity_sources                  = ["$request.header.Authorization"]
   name                              = "cam-api-authorizer"
   authorizer_payload_format_version = "2.0"
+  enable_simple_responses = "true"
 }
