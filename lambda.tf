@@ -128,6 +128,12 @@ resource "aws_lambda_function" "authorizer_lambda" {
 
   runtime = "provided.al2023"
 
+  environment {
+    variables = {
+      KMS_CAM_KEY_ID = aws_kms_key.cam_idp.key_id
+    }
+  }
+
 }
 
 resource "aws_cloudwatch_log_group" "authorizer" {
