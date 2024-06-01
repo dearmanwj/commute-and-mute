@@ -21,6 +21,8 @@ resource "aws_apigatewayv2_route" "route" {
   api_id = aws_apigatewayv2_api.cam_users_api.id
   route_key = "GET /users"
   target = "integrations/${aws_apigatewayv2_integration.cam_users_integration.id}"
+  authorizer_id = aws_apigatewayv2_authorizer.api.id
+  authorization_type = "CUSTOM"
 }
 
 resource "aws_apigatewayv2_stage" "stage" {
@@ -36,4 +38,13 @@ resource "aws_apigatewayv2_stage" "stage" {
 resource "aws_cloudwatch_log_group" "api" {
   name              = "API-Gateway-Execution-Logs_${aws_apigatewayv2_api.cam_users_api.id}"
   retention_in_days = 1
+}
+
+resource "aws_apigatewayv2_authorizer" "api" {
+  api_id                            = aws_apigatewayv2_api.cam_users_api.id
+  authorizer_type                   = "REQUEST"
+  authorizer_uri                    = aws_lambda_function.authorizer_lambda.invoke_arn
+  identity_sources                  = ["$request.header.Authorization"]
+  name                              = "cam-api-authorizer"
+  authorizer_payload_format_version = "2.0"
 }
