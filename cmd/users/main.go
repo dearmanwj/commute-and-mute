@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"willd/commute-and-mute/internal/auth"
 	"willd/commute-and-mute/internal/users"
@@ -28,12 +30,13 @@ func HandleUserRequest(context context.Context, request *events.APIGatewayV2HTTP
 	method := request.RequestContext.HTTP.Method
 	switch method {
 	case "GET":
-		return UserResource{
-			HomeLat: 1.1,
-			HomeLng: 1.2,
-			WorkLat: 1.2,
-			WorkLng: 1.3,
-		}, nil
+		log.Printf("Get request with context: %+v", request.RequestContext)
+		userIdString := request.RequestContext.Authorizer.Lambda["user"].(string)
+		userIdInt, err := strconv.Atoi(userIdString)
+		if err != nil {
+			return UserResource{}, fmt.Errorf("could not extract user ID from context: %v", err)
+		}
+		return GetUser(context, userIdInt)
 	case "PUT":
 		return UserResource{
 			HomeLat: 2.1,
@@ -44,6 +47,20 @@ func HandleUserRequest(context context.Context, request *events.APIGatewayV2HTTP
 	default:
 		return UserResource{}, errors.New("unsupported method")
 	}
+}
+
+func GetUser(context context.Context, userId int) (UserResource, error) {
+	users.GetDbConnection(context)
+	user, err := users.GetUser(context, userId)
+	if err != nil {
+		return UserResource{}, err
+	}
+	return UserResource{
+		HomeLat: user.HomeLat,
+		HomeLng: user.HomeLng,
+		WorkLat: user.WorkLat,
+		WorkLng: user.WorkLng,
+	}, nil
 }
 
 func HandleUserUpdate(context context.Context, request *events.LambdaFunctionURLRequest) error {

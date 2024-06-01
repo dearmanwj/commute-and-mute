@@ -83,7 +83,7 @@ func TestValidateToken(t *testing.T) {
 	if err != nil {
 		t.Error("could not validate token")
 	}
-	if result != 10503812 {
+	if result != "10503812" {
 		t.Error("incorrect sub")
 	}
 }

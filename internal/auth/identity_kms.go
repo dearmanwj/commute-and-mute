@@ -81,24 +81,20 @@ func (tokenGenerator TokenGenerator) GenerateForId(ctx context.Context, id int) 
 	return signedToken
 }
 
-func (tokenGenerator TokenGenerator) GetIdIfValid(ctx context.Context, tokenString string) (int, error) {
+func (tokenGenerator TokenGenerator) GetIdIfValid(ctx context.Context, tokenString string) (string, error) {
 	tokenJwt, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
 		return tokenGenerator.getPublicKey(ctx)
 	}, jwt.WithValidMethods([]string{"ES256"}), jwt.WithExpirationRequired())
 
 	if err != nil {
-		return -1, fmt.Errorf("could not validate token: %w", err)
+		return "", fmt.Errorf("could not validate token: %w", err)
 	}
 
 	subjectString, err := tokenJwt.Claims.GetSubject()
 	if err != nil {
-		return -1, err
+		return "", err
 	}
-	subjectInt, err := strconv.Atoi(subjectString)
-	if err != nil {
-		return -1, fmt.Errorf("jwt contains non-numeric subject")
-	}
-	return subjectInt, nil
+	return subjectString, nil
 }
 
 func (tokenGenerator TokenGenerator) getPublicKey(ctx context.Context) (*ecdsa.PublicKey, error) {
