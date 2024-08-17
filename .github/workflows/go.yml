@@ -35,8 +35,9 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.func }}
-        path: .cmd/${{ matrix.func }}/bootstrap
-
+        path: ./cmd/${{ matrix.func }}/bootstrap
+        retention-days: 5
+        if-no-files-found: error
 
   terraform:
 
