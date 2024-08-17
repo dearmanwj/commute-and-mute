@@ -29,13 +29,13 @@ jobs:
 
     - name: Build
       id: activity-build
-      run: GOOS=linux GOARCH=amd64 go build -v -o bootstrap .
+      run: GOOS=linux GOARCH=amd64 go build -v -o bin/${{ matrix.func }}/bootstrap .
       
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: bin-${{ matrix.func }}
-        path: ./cmd/${{ matrix.func }}/bootstrap
+        name: artifact-${{ matrix.func }}
+        path: ./cmd/${{ matrix.func }}/bin
         retention-days: 5
         if-no-files-found: error
 
@@ -53,7 +53,7 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
       - uses: actions/download-artifact@v4
         with: 
-          pattern: bin-*
+          pattern: artifact-*
           path: ./artifacts
           merge-multiple: true
       - name: Show files
