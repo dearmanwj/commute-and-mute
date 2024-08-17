@@ -6,12 +6,12 @@ locals {
 ## Activity Lambda
 data "archive_file" "activity_lambda" {
   type        = "zip"
-  source_file = "cmd/activity/bootstrap"
-  output_path = "cmd/activity/bootstrap.zip"
+  source_file = "artifact/activity/bootstrap"
+  output_path = "activity.zip"
 }
 
 resource "aws_lambda_function" "activity_lambda" {
-  filename      = "${path.module}/cmd/activity/bootstrap.zip"
+  filename      = "${path.module}/activity.zip"
   function_name = "cam-activity"
   role          = aws_iam_role.iam_for_lambda.arn
   handler = "hello.handler"
@@ -42,12 +42,12 @@ resource "aws_cloudwatch_log_group" "activity" {
 ## Onboard lambda
 data "archive_file" "onboard_lambda" {
   type        = "zip"
-  source_file = "cmd/onboard/bootstrap"
-  output_path = "cmd/onboard/bootstrap.zip"
+  source_file = "artifact/onboard/bootstrap"
+  output_path = "onboard.zip"
 }
 
 resource "aws_lambda_function" "onboard_lambda" {
-  filename      = "${path.module}/cmd/onboard/bootstrap.zip"
+  filename      = "${path.module}/onboard.zip"
   function_name = "cam-onboard"
   role          = aws_iam_role.iam_for_lambda.arn
   handler = "hello.handler"
@@ -78,12 +78,12 @@ resource "aws_cloudwatch_log_group" "onboard" {
 ## Users lambda
 data "archive_file" "users_lambda" {
   type        = "zip"
-  source_file = "cmd/users/bootstrap"
-  output_path = "cmd/users/bootstrap.zip"
+  source_file = "artifact/users/bootstrap"
+  output_path = "users.zip"
 }
 
 resource "aws_lambda_function" "users_lambda" {
-  filename      = "${path.module}/cmd/users/bootstrap.zip"
+  filename      = "${path.module}/users.zip"
   function_name = "cam-users"
   role          = aws_iam_role.iam_for_lambda.arn
   handler = "hello.handler"
@@ -114,12 +114,12 @@ resource "aws_lambda_permission" "api_invoke_lambda" {
 ## Authorizer lambda
 data "archive_file" "authorizer_lambda" {
   type        = "zip"
-  source_file = "cmd/authorizer/bootstrap"
-  output_path = "cmd/authorizer/bootstrap.zip"
+  source_file = "artifact/authorizer/bootstrap"
+  output_path = "authorizer.zip"
 }
 
 resource "aws_lambda_function" "authorizer_lambda" {
-  filename      = "${path.module}/cmd/authorizer/bootstrap.zip"
+  filename      = "${path.module}/authorizer.zip"
   function_name = "cam-authorizer"
   role          = aws_iam_role.iam_for_lambda.arn
   handler = "hello.handler"
