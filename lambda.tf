@@ -6,7 +6,7 @@ locals {
 ## Activity Lambda
 data "archive_file" "activity_lambda" {
   type        = "zip"
-  source_file = "artifact/activity/bootstrap"
+  source_file = "artifacts/activity/bootstrap"
   output_path = "activity.zip"
 }
 
@@ -42,7 +42,7 @@ resource "aws_cloudwatch_log_group" "activity" {
 ## Onboard lambda
 data "archive_file" "onboard_lambda" {
   type        = "zip"
-  source_file = "artifact/onboard/bootstrap"
+  source_file = "artifacts/onboard/bootstrap"
   output_path = "onboard.zip"
 }
 
@@ -78,7 +78,7 @@ resource "aws_cloudwatch_log_group" "onboard" {
 ## Users lambda
 data "archive_file" "users_lambda" {
   type        = "zip"
-  source_file = "artifact/users/bootstrap"
+  source_file = "artifacts/users/bootstrap"
   output_path = "users.zip"
 }
 
@@ -114,7 +114,7 @@ resource "aws_lambda_permission" "api_invoke_lambda" {
 ## Authorizer lambda
 data "archive_file" "authorizer_lambda" {
   type        = "zip"
-  source_file = "artifact/authorizer/bootstrap"
+  source_file = "artifacts/authorizer/bootstrap"
   output_path = "authorizer.zip"
 }
 
