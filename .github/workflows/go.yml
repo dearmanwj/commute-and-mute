@@ -11,8 +11,14 @@ on:
 
 jobs:
 
-  build-activity:
+  build-lambdas:
+    strategy:
+      matrix:
+        func: ["activity", "authorizer", "onboard", "users"]
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./cmd/${{matrix.func}}
     steps:
     - uses: actions/checkout@v4
 
@@ -23,13 +29,13 @@ jobs:
 
     - name: Build
       id: activity-build
-      run: GOOS=linux GOARCH=amd64 go build -v -o ./cmd/activity/bootstrap ./cmd/activity
+      run: GOOS=linux GOARCH=amd64 go build -v -o bootstrap .
       
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: activity
-        path: ./cmd/activity/bootstrap
+        name: ${{ matrix.func }}
+        path: bootstrap
 
 
   terraform:
@@ -40,7 +46,7 @@ jobs:
   
     name: "Terraform plan"
     runs-on: ubuntu-latest
-    needs: build-activity
+    needs: build-lambdas
     steps:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
