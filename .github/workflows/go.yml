@@ -30,15 +30,12 @@ jobs:
     - name: Build
       id: activity-build
       run: GOOS=linux GOARCH=amd64 go build -v -o bootstrap .
-
-    - name: Show files
-      run: ls -R
       
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.func }}
-        path: ./bootstrap
+        path: .cmd/${{ matrix.func }}/bootstrap
 
 
   terraform:
