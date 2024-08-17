@@ -34,7 +34,7 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.func }}
+        name: bin-${{ matrix.func }}
         path: ./cmd/${{ matrix.func }}/bootstrap
         retention-days: 5
         if-no-files-found: error
@@ -53,8 +53,9 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
       - uses: actions/download-artifact@v4
         with: 
-          name: activity
-          path: ./cmd/activity
+          pattern: bin-*
+          path: ./artifacts
+          merge-multiple: true
       - name: Show files
         run: ls -R
 
@@ -69,5 +70,5 @@ jobs:
       - name: Terraform Plan
         id: plan
         run: terraform plan -no-color
-        continue-on-error: true
+
   
