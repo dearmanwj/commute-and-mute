@@ -47,6 +47,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with: 
           name: activity
+          path: ./cmd/activity
       - name: Show files
         run: ls -R
 
