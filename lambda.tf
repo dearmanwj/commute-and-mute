@@ -1,8 +1,3 @@
-locals {
-  strava_secret = "80580d66c7d4514ecf1f904f9a698fb314b2463a"
-
-}
-
 ## Activity Lambda
 data "archive_file" "activity_lambda" {
   type        = "zip"
@@ -22,7 +17,7 @@ resource "aws_lambda_function" "activity_lambda" {
 
   environment {
     variables = {
-      STRAVA_CLIENT_SECRET = local.strava_secret
+      STRAVA_CLIENT_SECRET = var.strava_secret
       USERS_TABLE_NAME = aws_dynamodb_table.cam-users.name
       WEBHOOK_VERIFY_TOKEN = "KPHo87W@PLVCZs"
     }
@@ -58,7 +53,7 @@ resource "aws_lambda_function" "onboard_lambda" {
 
   environment {
     variables = {
-      STRAVA_CLIENT_SECRET = local.strava_secret
+      STRAVA_CLIENT_SECRET = var.strava_secret
       USERS_TABLE_NAME = aws_dynamodb_table.cam-users.name
       KMS_CAM_KEY_ID = aws_kms_key.cam_idp.key_id
     }

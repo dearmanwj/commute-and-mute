@@ -4,3 +4,8 @@ variable "aws_region" {
   type    = string
   default = "eu-north-1"
 }
+
+variable "strava_secret" {
+  type = string
+  sensitive = true
+}
