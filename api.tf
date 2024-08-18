@@ -16,9 +16,17 @@ resource "aws_apigatewayv2_integration" "cam_users_integration" {
   payload_format_version = "2.0"
 }
 
-resource "aws_apigatewayv2_route" "route" {
+resource "aws_apigatewayv2_route" "get_route" {
   api_id = aws_apigatewayv2_api.cam_users_api.id
   route_key = "GET /users"
+  target = "integrations/${aws_apigatewayv2_integration.cam_users_integration.id}"
+  authorizer_id = aws_apigatewayv2_authorizer.api.id
+  authorization_type = "CUSTOM"
+}
+
+resource "aws_apigatewayv2_route" "put_route" {
+  api_id = aws_apigatewayv2_api.cam_users_api.id
+  route_key = "PUT /users"
   target = "integrations/${aws_apigatewayv2_integration.cam_users_integration.id}"
   authorizer_id = aws_apigatewayv2_authorizer.api.id
   authorization_type = "CUSTOM"
