@@ -40,21 +40,26 @@ func HandleTokenExchange(context context.Context, request *events.LambdaFunction
 		return ExchangeTokenResponse{}, err
 	}
 
-	user := authResponse.ToUser()
+	userInDb, err := users.GetUser(context, authResponse.Athlete.ID)
+	if err != nil {
+		return ExchangeTokenResponse{}, err
+	}
 
-	log.Printf("user: %v", user)
+	userInDb = authResponse.AddToUser(userInDb)
 
-	users.UpdateUser(context, user)
+	log.Printf("user: %v", userInDb)
+
+	users.UpdateUser(context, userInDb)
 
 	generator := auth.NewTokenGenerator(config)
-	token := generator.GenerateForId(context, user.ID)
+	token := generator.GenerateForId(context, userInDb.ID)
 
 	return ExchangeTokenResponse{
-		user.ID,
-		user.HomeLat,
-		user.HomeLng,
-		user.WorkLat,
-		user.WorkLng,
+		userInDb.ID,
+		userInDb.HomeLat,
+		userInDb.HomeLng,
+		userInDb.WorkLat,
+		userInDb.WorkLng,
 		token,
 	}, nil
 }

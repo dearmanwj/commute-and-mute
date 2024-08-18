@@ -61,14 +61,18 @@ func GetUser(ctx context.Context, id int) (User, error) {
 	response, err := DB.DynamoDbClient.GetItem(ctx, &dynamodb.GetItemInput{Key: key, TableName: aws.String(DB.TableName)})
 	if err != nil {
 		log.Printf("Error getting user: %v,\n", err)
-		return user, err
+		return User{}, err
+	}
+
+	if response.Item == nil {
+		return User{}, nil
 	}
 
 	err = attributevalue.UnmarshalMap(response.Item, &user)
 
 	if err != nil {
 		log.Printf("Error mapping user to go type: %v,\n", user)
-		return user, err
+		return User{}, err
 	}
 
 	return user, nil

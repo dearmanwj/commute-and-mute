@@ -74,17 +74,12 @@ func (client StravaClient) RefreshToken(refreshToken string) (AuthorizationRespo
 	return client.makeTokenRequest(refreshToken, "refresh_token")
 }
 
-func (auth AuthorizationResponse) ToUser() users.User {
-	return users.User{
-		ID:           auth.Athlete.ID,
-		AccessToken:  auth.Access_Token,
-		RefreshToken: auth.Refresh_Token,
-		HomeLat:      -1,
-		HomeLng:      -1,
-		WorkLat:      -1,
-		WorkLng:      -1,
-		ExpiresAt:    auth.Expires_At,
-	}
+func (auth AuthorizationResponse) AddToUser(user users.User) users.User {
+	user.ID = auth.Athlete.ID
+	user.AccessToken = auth.Access_Token
+	user.RefreshToken = auth.Refresh_Token
+	user.ExpiresAt = auth.Expires_At
+	return user
 }
 
 func (client StravaClient) makeTokenRequest(token string, grantType string) (AuthorizationResponse, error) {
