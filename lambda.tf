@@ -19,7 +19,7 @@ resource "aws_lambda_function" "activity_lambda" {
     variables = {
       STRAVA_CLIENT_SECRET = var.strava_secret
       USERS_TABLE_NAME = aws_dynamodb_table.cam-users.name
-      WEBHOOK_VERIFY_TOKEN = "KPHo87W@PLVCZs"
+      WEBHOOK_VERIFY_TOKEN = var.webhook_verify_token
     }
   }
 }

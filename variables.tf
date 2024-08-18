@@ -9,3 +9,8 @@ variable "strava_secret" {
   type = string
   sensitive = true
 }
+
+variable "webhook_verify_token" {
+  type = string
+  sensitive = true
+}
