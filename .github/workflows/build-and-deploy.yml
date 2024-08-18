@@ -57,8 +57,6 @@ jobs:
           pattern: artifact-*
           path: ./artifacts
           merge-multiple: true
-      - name: Show files
-        run: ls -R
 
       - name: Terraform Init
         id: init
