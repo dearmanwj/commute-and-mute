@@ -2,14 +2,20 @@ package auth
 
 import (
 	"context"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/x509"
 	"encoding/asn1"
-	"encoding/base64"
 	"math/big"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/kms/types"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type mockKmsApi struct {
@@ -57,11 +63,13 @@ func TestGenerateSigned(t *testing.T) {
 
 func TestValidateToken(t *testing.T) {
 	// Given
+	id := 1234567
+	privateKey := generateKeyPair()
 	mock := mockKmsApi{
 		mockSign: nil,
 		mockGetPublicKey: func(ctx context.Context, params *kms.GetPublicKeyInput, optFns ...func(*kms.Options)) (*kms.GetPublicKeyOutput, error) {
-			keyString := "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAETz8/nVxGqJ0QwrDsnuG6EOEEUZ3jQ1rbwJo7G8IJ2zGb8p2Xjrph+90p6T5ityqoYW+inVJ2vh+kmbdb9jzcBA=="
-			keyBytes, _ := base64.StdEncoding.DecodeString(keyString)
+			publicKey := &privateKey.PublicKey
+			keyBytes, _ := x509.MarshalPKIXPublicKey(publicKey)
 			output := kms.GetPublicKeyOutput{
 				PublicKey: keyBytes,
 			}
@@ -69,21 +77,26 @@ func TestValidateToken(t *testing.T) {
 		},
 	}
 
-	token := "eyJhbGciOiJFUzI1NiIsInR5cCI6Imp3dCJ9.eyJzdWIiOiIxMDUwMzgxMiIsImlzcyI6ImNvbW11dGUtYW5kLW11dGUiLCJleHAiOjE3MTI2MDM3NDJ9.K_UlrCKa_SKrWVDTAfvOtZPGIct2BHCHHVO_T4OihQTvA6R2-_-3qsB4bMdrPghkrl4kM4p-0Lgc6vZ29Btrtg"
-
 	generator := TokenGenerator{
 		client: mock,
 	}
 	ctx := context.Background()
+	expTime := time.Now().Add(time.Hour)
+	token := jwt.NewWithClaims(jwt.SigningMethodES256,
+		jwt.RegisteredClaims{
+			Subject:   strconv.Itoa(id),
+			ExpiresAt: jwt.NewNumericDate(expTime),
+		})
+	tokenString, _ := token.SignedString(privateKey)
 
 	// When
-	result, err := generator.GetIdIfValid(ctx, token)
+	result, err := generator.GetIdIfValid(ctx, tokenString)
 
 	// Then
 	if err != nil {
-		t.Error("could not validate token")
+		t.Error("could not validate token", err)
 	}
-	if result != "10503812" {
+	if result != strconv.Itoa(id) {
 		t.Error("incorrect sub")
 	}
 }
@@ -95,4 +108,10 @@ func getMockSignature() []byte {
 	}
 	encoded, _ := asn1.Marshal(sig)
 	return encoded
+}
+
+func generateKeyPair() *ecdsa.PrivateKey {
+	curve := elliptic.P256()
+	key, _ := ecdsa.GenerateKey(curve, rand.Reader)
+	return key
 }
