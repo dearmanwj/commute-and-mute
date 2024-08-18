@@ -12,7 +12,6 @@ resource "aws_apigatewayv2_integration" "cam_users_integration" {
   integration_type = "AWS_PROXY"
 
   description            = "CAM User lambda integration"
-  integration_method     = "POST"
   integration_uri        = aws_lambda_function.users_lambda.invoke_arn
   payload_format_version = "2.0"
 }
