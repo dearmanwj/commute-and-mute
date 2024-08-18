@@ -63,6 +63,9 @@ resource "aws_lambda_function" "onboard_lambda" {
 resource "aws_lambda_function_url" "onboard" {
   function_name      = aws_lambda_function.onboard_lambda.function_name
   authorization_type = "NONE"
+  cors {
+    allow_origins = [ "*" ]
+  }
 }
 
 resource "aws_cloudwatch_log_group" "onboard" {
