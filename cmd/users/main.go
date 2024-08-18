@@ -39,13 +39,7 @@ func HandleUserRequest(context context.Context, request *events.APIGatewayV2HTTP
 		if err != nil {
 			return UserResource{}, fmt.Errorf("request body %+v could not be parsed", request.Body)
 		}
-		HandleUserUpdate(context, userId, userRequestBody)
-		return UserResource{
-			HomeLat: 2.1,
-			HomeLng: 2.2,
-			WorkLat: 2.2,
-			WorkLng: 2.3,
-		}, nil
+		return HandleUserUpdate(context, userId, userRequestBody)
 	default:
 		return UserResource{}, errors.New("unsupported method")
 	}
