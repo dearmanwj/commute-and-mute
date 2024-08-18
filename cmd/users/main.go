@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"strconv"
 	"strings"
@@ -28,16 +27,14 @@ func main() {
 
 func HandleUserRequest(context context.Context, request *events.APIGatewayV2HTTPRequest) (UserResource, error) {
 	method := request.RequestContext.HTTP.Method
+	userId := GetUserIdFromContext(request.RequestContext)
 	switch method {
 	case "GET":
-		log.Printf("Get request with context: %+v", request.RequestContext)
-		userIdString := request.RequestContext.Authorizer.Lambda["user"].(string)
-		userIdInt, err := strconv.Atoi(userIdString)
-		if err != nil {
-			return UserResource{}, fmt.Errorf("could not extract user ID from context: %v", err)
-		}
-		return GetUser(context, userIdInt)
+		log.Printf("GET request with context: %+v", request.RequestContext)
+		return GetUser(context, userId)
 	case "PUT":
+		log.Printf("PUT request with context: %+v", request.RequestContext)
+		log.Printf("PUT request with context: %+v", request.Body)
 		return UserResource{
 			HomeLat: 2.1,
 			HomeLng: 2.2,
@@ -46,6 +43,17 @@ func HandleUserRequest(context context.Context, request *events.APIGatewayV2HTTP
 		}, nil
 	default:
 		return UserResource{}, errors.New("unsupported method")
+	}
+}
+
+func GetUserIdFromContext(requestContext events.APIGatewayV2HTTPRequestContext) int {
+	userIdString := requestContext.Authorizer.Lambda["user"].(string)
+	userIdInt, err := strconv.Atoi(userIdString)
+	if err != nil {
+		log.Panicf("Unparseable id %v received", userIdString)
+		return -1
+	} else {
+		return userIdInt
 	}
 }
 
