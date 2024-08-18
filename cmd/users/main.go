@@ -4,10 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"strconv"
-	"strings"
-	"willd/commute-and-mute/internal/auth"
 	"willd/commute-and-mute/internal/users"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -35,6 +34,12 @@ func HandleUserRequest(context context.Context, request *events.APIGatewayV2HTTP
 	case "PUT":
 		log.Printf("PUT request with context: %+v", request.RequestContext)
 		log.Printf("PUT request with context: %+v", request.Body)
+		var userRequestBody UserResource
+		err := json.Unmarshal([]byte(request.Body), &userRequestBody)
+		if err != nil {
+			return UserResource{}, fmt.Errorf("request body %+v could not be parsed", request.Body)
+		}
+		HandleUserUpdate(context, userId, userRequestBody)
 		return UserResource{
 			HomeLat: 2.1,
 			HomeLng: 2.2,
@@ -71,26 +76,17 @@ func GetUser(context context.Context, userId int) (UserResource, error) {
 	}, nil
 }
 
-func HandleUserUpdate(context context.Context, request *events.LambdaFunctionURLRequest) error {
+func HandleUserUpdate(context context.Context, userId int, userDetails UserResource) (UserResource, error) {
 	users.GetDbConnection(context)
-	log.Println("Updating user with home and work locations")
-	authHeader := request.Headers["Authorization"]
-	token := strings.Split(authHeader, "Bearer ")[1]
-	id, err := auth.GetConnectedUserId(token)
-	if err != nil {
-		log.Panicln(err)
-	}
-	var formData UserResource
-	json.Unmarshal([]byte(request.Body), &formData)
-	HandleUserSubmitDetails(context, id, formData.HomeLat, formData.HomeLng, formData.WorkLat, formData.WorkLng)
-	return nil
+	updatedUser, err := HandleUserSubmitDetails(context, userId, userDetails.HomeLat, userDetails.HomeLng, userDetails.WorkLat, userDetails.WorkLng)
+	return updatedUser, err
 }
 
-func HandleUserSubmitDetails(ctx context.Context, id int, hlat float64, hlng float64, wlat float64, wlng float64) error {
+func HandleUserSubmitDetails(ctx context.Context, id int, hlat float64, hlng float64, wlat float64, wlng float64) (UserResource, error) {
 
 	user, err := users.GetUser(ctx, id)
 	if err != nil {
-		return err
+		return UserResource{}, err
 	}
 
 	user.HomeLat = hlat
@@ -100,9 +96,14 @@ func HandleUserSubmitDetails(ctx context.Context, id int, hlat float64, hlng flo
 
 	err = users.UpdateUser(ctx, user)
 	if err != nil {
-		return err
+		return UserResource{}, err
 	}
 
 	log.Printf("updated user: %v, %v, %v, %v, %v", user.ID, hlat, hlng, wlat, wlng)
-	return nil
+	return UserResource{
+		HomeLat: hlat,
+		HomeLng: hlng,
+		WorkLat: wlat,
+		WorkLng: wlng,
+	}, nil
 }
