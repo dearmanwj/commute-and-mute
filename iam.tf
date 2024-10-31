@@ -49,7 +49,8 @@ data "aws_iam_policy_document" "dynamodb_policy" {
       actions = [
         "dynamodb:GetItem",
         "dynamodb:PutItem",
-        "dynamodb:UpdateItem"
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem"
         ]
         resources = [aws_dynamodb_table.cam-users.arn]
         effect = "Allow"
