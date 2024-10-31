@@ -32,6 +32,14 @@ resource "aws_apigatewayv2_route" "put_route" {
   authorization_type = "CUSTOM"
 }
 
+resource "aws_apigatewayv2_route" "delete_route" {
+  api_id = aws_apigatewayv2_api.cam_users_api.id
+  route_key = "DELETE /users"
+  target = "integrations/${aws_apigatewayv2_integration.cam_users_integration.id}"
+  authorizer_id = aws_apigatewayv2_authorizer.api.id
+  authorization_type = "CUSTOM"
+}
+
 resource "aws_apigatewayv2_stage" "stage" {
   api_id = aws_apigatewayv2_api.cam_users_api.id
   name   = "$default"
