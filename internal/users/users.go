@@ -2,6 +2,7 @@ package users
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 
@@ -76,6 +77,19 @@ func GetUser(ctx context.Context, id int) (User, error) {
 	}
 
 	return user, nil
+}
+
+func DeleteUser(context context.Context, id int) error {
+	val, err := attributevalue.Marshal(id)
+	if err != nil {
+		panic(err)
+	}
+	key := map[string]types.AttributeValue{"ID": val}
+	_, err = DB.DynamoDbClient.DeleteItem(context, &dynamodb.DeleteItemInput{Key: key, TableName: aws.String(DB.TableName)})
+	if err != nil {
+		return fmt.Errorf("error deleting user from db %v", err)
+	}
+	return nil
 }
 
 func GetDbConnection(ctx context.Context) error {

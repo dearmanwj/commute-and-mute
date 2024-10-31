@@ -40,6 +40,9 @@ func HandleUserRequest(context context.Context, request *events.APIGatewayV2HTTP
 			return UserResource{}, fmt.Errorf("request body %+v could not be parsed", request.Body)
 		}
 		return HandleUserUpdate(context, userId, userRequestBody)
+	case "DELETE":
+		log.Printf("DELETE request with context: %+v", request.RequestContext)
+		return UserResource{}, DeleteUser(context, userId)
 	default:
 		return UserResource{}, errors.New("unsupported method")
 	}
@@ -68,6 +71,11 @@ func GetUser(context context.Context, userId int) (UserResource, error) {
 		WorkLat: user.WorkLat,
 		WorkLng: user.WorkLng,
 	}, nil
+}
+
+func DeleteUser(context context.Context, userId int) error {
+	users.GetDbConnection(context)
+	return users.DeleteUser(context, userId)
 }
 
 func HandleUserUpdate(context context.Context, userId int, userDetails UserResource) (UserResource, error) {
