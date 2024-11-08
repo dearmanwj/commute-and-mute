@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"willd/commute-and-mute/internal/serialization"
 	"willd/commute-and-mute/internal/users"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -14,10 +15,10 @@ import (
 )
 
 type UserResource struct {
-	HomeLat float64 `json:"hlat"`
-	HomeLng float64 `json:"hlng"`
-	WorkLat float64 `json:"wlat"`
-	WorkLng float64 `json:"wlng"`
+	HomeLat *float64 `json:"hlat"`
+	HomeLng *float64 `json:"hlng"`
+	WorkLat *float64 `json:"wlat"`
+	WorkLng *float64 `json:"wlng"`
 }
 
 func main() {
@@ -39,7 +40,7 @@ func HandleUserRequest(context context.Context, request *events.APIGatewayV2HTTP
 		if err != nil {
 			return UserResource{}, fmt.Errorf("request body %+v could not be parsed", request.Body)
 		}
-		return HandleUserUpdate(context, userId, userRequestBody)
+		return HandleUserSubmitDetails(context, userId, userRequestBody.HomeLat, userRequestBody.HomeLng, userRequestBody.WorkLat, userRequestBody.WorkLng)
 	case "DELETE":
 		log.Printf("DELETE request with context: %+v", request.RequestContext)
 		return UserResource{}, DeleteUser(context, userId)
@@ -68,11 +69,12 @@ func GetUser(context context.Context, userId int) (UserResource, error) {
 	if err != nil {
 		return UserResource{}, err
 	}
+
 	return UserResource{
-		HomeLat: user.HomeLat,
-		HomeLng: user.HomeLng,
-		WorkLat: user.WorkLat,
-		WorkLng: user.WorkLng,
+		HomeLat: serialization.GetNilFromNegative1(user.HomeLat),
+		HomeLng: serialization.GetNilFromNegative1(user.HomeLng),
+		WorkLat: serialization.GetNilFromNegative1(user.WorkLat),
+		WorkLng: serialization.GetNilFromNegative1(user.WorkLng),
 	}, nil
 }
 
@@ -84,13 +86,7 @@ func DeleteUser(context context.Context, userId int) error {
 	return db.DeleteUser(context, userId)
 }
 
-func HandleUserUpdate(context context.Context, userId int, userDetails UserResource) (UserResource, error) {
-	users.GetDbConnection(context)
-	updatedUser, err := HandleUserSubmitDetails(context, userId, userDetails.HomeLat, userDetails.HomeLng, userDetails.WorkLat, userDetails.WorkLng)
-	return updatedUser, err
-}
-
-func HandleUserSubmitDetails(ctx context.Context, id int, hlat float64, hlng float64, wlat float64, wlng float64) (UserResource, error) {
+func HandleUserSubmitDetails(ctx context.Context, id int, hlat *float64, hlng *float64, wlat *float64, wlng *float64) (UserResource, error) {
 	db, err := users.GetDbConnection(ctx)
 	if err != nil {
 		panic(err)
@@ -100,10 +96,10 @@ func HandleUserSubmitDetails(ctx context.Context, id int, hlat float64, hlng flo
 		return UserResource{}, err
 	}
 
-	user.HomeLat = hlat
-	user.HomeLng = hlng
-	user.WorkLat = wlat
-	user.WorkLng = wlng
+	user.HomeLat = *hlat
+	user.HomeLng = *hlng
+	user.WorkLat = *wlat
+	user.WorkLng = *wlng
 
 	err = db.UpdateUser(ctx, user)
 	if err != nil {

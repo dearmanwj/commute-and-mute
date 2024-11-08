@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"willd/commute-and-mute/internal/auth"
+	"willd/commute-and-mute/internal/serialization"
 	"willd/commute-and-mute/internal/strava"
 	"willd/commute-and-mute/internal/users"
 
@@ -13,12 +14,12 @@ import (
 )
 
 type ExchangeTokenResponse = struct {
-	ID      int     `json:"id"`
-	HomeLat float64 `json:"hlat"`
-	HomeLng float64 `json:"hlng"`
-	WorkLat float64 `json:"wlat"`
-	WorkLng float64 `json:"wlng"`
-	Token   string  `json:"token"`
+	ID      int      `json:"id"`
+	HomeLat *float64 `json:"hlat"`
+	HomeLng *float64 `json:"hlng"`
+	WorkLat *float64 `json:"wlat"`
+	WorkLng *float64 `json:"wlng"`
+	Token   string   `json:"token"`
 }
 
 func main() {
@@ -32,7 +33,10 @@ func HandleTokenExchange(context context.Context, request *events.LambdaFunction
 		log.Panicf("Error getting aws config: %v\n", err)
 
 	}
-	users.GetDbConnection(context)
+	db, err := users.GetDbConnection(context)
+	if err != nil {
+		panic(err)
+	}
 	stravaClient := strava.NewStravaClient(strava.STRAVA_BASE_URL)
 	authResponse, err := stravaClient.ExchangeToken(code)
 
@@ -40,7 +44,7 @@ func HandleTokenExchange(context context.Context, request *events.LambdaFunction
 		return ExchangeTokenResponse{}, err
 	}
 
-	userInDb, err := users.GetUser(context, authResponse.Athlete.ID)
+	userInDb, err := db.GetUser(context, authResponse.Athlete.ID)
 	if err != nil {
 		return ExchangeTokenResponse{}, err
 	}
@@ -49,17 +53,17 @@ func HandleTokenExchange(context context.Context, request *events.LambdaFunction
 
 	log.Printf("user: %v", userInDb)
 
-	users.UpdateUser(context, userInDb)
+	db.UpdateUser(context, userInDb)
 
 	generator := auth.NewTokenGenerator(config)
 	token := generator.GenerateForId(context, userInDb.ID)
 
 	return ExchangeTokenResponse{
 		userInDb.ID,
-		userInDb.HomeLat,
-		userInDb.HomeLng,
-		userInDb.WorkLat,
-		userInDb.WorkLng,
+		serialization.GetNilFromNegative1(userInDb.HomeLat),
+		serialization.GetNilFromNegative1(userInDb.HomeLng),
+		serialization.GetNilFromNegative1(userInDb.WorkLat),
+		serialization.GetNilFromNegative1(userInDb.WorkLng),
 		token,
 	}, nil
 }
