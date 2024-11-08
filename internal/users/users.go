@@ -13,8 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
-var DB TableBasics
-
 type User struct {
 	ID           int
 	AccessToken  string
@@ -46,7 +44,7 @@ func (t TableBasics) UpdateUser(ctx context.Context, user User) error {
 	}
 
 	_, err = t.DynamoDbClient.PutItem(ctx, &dynamodb.PutItemInput{
-		Item: item, TableName: aws.String(DB.TableName),
+		Item: item, TableName: aws.String(t.TableName),
 	},
 	)
 
@@ -65,7 +63,7 @@ func (t TableBasics) GetUser(ctx context.Context, id int) (User, error) {
 
 	var user User
 
-	response, err := t.DynamoDbClient.GetItem(ctx, &dynamodb.GetItemInput{Key: key, TableName: aws.String(DB.TableName)})
+	response, err := t.DynamoDbClient.GetItem(ctx, &dynamodb.GetItemInput{Key: key, TableName: aws.String(t.TableName)})
 	if err != nil {
 		log.Printf("Error getting user: %v,\n", err)
 		return User{}, err
@@ -91,7 +89,7 @@ func (t TableBasics) DeleteUser(context context.Context, id int) error {
 		panic(err)
 	}
 	key := map[string]types.AttributeValue{"ID": val}
-	_, err = t.DynamoDbClient.DeleteItem(context, &dynamodb.DeleteItemInput{Key: key, TableName: aws.String(DB.TableName)})
+	_, err = t.DynamoDbClient.DeleteItem(context, &dynamodb.DeleteItemInput{Key: key, TableName: aws.String(t.TableName)})
 	if err != nil {
 		return fmt.Errorf("error deleting user from db %v", err)
 	}
