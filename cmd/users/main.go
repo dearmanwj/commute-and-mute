@@ -60,8 +60,11 @@ func GetUserIdFromContext(requestContext events.APIGatewayV2HTTPRequestContext) 
 }
 
 func GetUser(context context.Context, userId int) (UserResource, error) {
-	users.GetDbConnection(context)
-	user, err := users.GetUser(context, userId)
+	db, err := users.GetDbConnection(context)
+	if err != nil {
+		panic(err)
+	}
+	user, err := db.GetUser(context, userId)
 	if err != nil {
 		return UserResource{}, err
 	}
@@ -74,8 +77,11 @@ func GetUser(context context.Context, userId int) (UserResource, error) {
 }
 
 func DeleteUser(context context.Context, userId int) error {
-	users.GetDbConnection(context)
-	return users.DeleteUser(context, userId)
+	db, err := users.GetDbConnection(context)
+	if err != nil {
+		return err
+	}
+	return db.DeleteUser(context, userId)
 }
 
 func HandleUserUpdate(context context.Context, userId int, userDetails UserResource) (UserResource, error) {
@@ -85,8 +91,11 @@ func HandleUserUpdate(context context.Context, userId int, userDetails UserResou
 }
 
 func HandleUserSubmitDetails(ctx context.Context, id int, hlat float64, hlng float64, wlat float64, wlng float64) (UserResource, error) {
-
-	user, err := users.GetUser(ctx, id)
+	db, err := users.GetDbConnection(ctx)
+	if err != nil {
+		panic(err)
+	}
+	user, err := db.GetUser(ctx, id)
 	if err != nil {
 		return UserResource{}, err
 	}
@@ -96,7 +105,7 @@ func HandleUserSubmitDetails(ctx context.Context, id int, hlat float64, hlng flo
 	user.WorkLat = wlat
 	user.WorkLng = wlng
 
-	err = users.UpdateUser(ctx, user)
+	err = db.UpdateUser(ctx, user)
 	if err != nil {
 		return UserResource{}, err
 	}
