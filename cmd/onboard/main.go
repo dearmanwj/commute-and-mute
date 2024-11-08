@@ -34,6 +34,7 @@ func HandleTokenExchange(context context.Context, request *events.LambdaFunction
 
 	}
 	db, err := users.GetDbConnection(context)
+	log.Printf("connected to table %v", db.TableName)
 	if err != nil {
 		panic(err)
 	}
