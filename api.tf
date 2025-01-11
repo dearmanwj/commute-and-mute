@@ -1,5 +1,5 @@
 data "aws_cloudfront_distribution" "cloudfront" {
-  id = "react_app_distribution"
+  id = "EWKILBEV49A1M"
 }
 
 resource "aws_apigatewayv2_api" "cam_users_api" {
