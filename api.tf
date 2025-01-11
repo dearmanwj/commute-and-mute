@@ -7,7 +7,7 @@ resource "aws_apigatewayv2_api" "cam_users_api" {
   protocol_type = "HTTP"
 
   cors_configuration {
-    allow_origins = [data.aws_cloudfront_distribution.cloudfront.domain_name]
+    allow_origins = [ "https://${data.aws_cloudfront_distribution.cloudfront.domain_name}"]
     allow_methods = ["GET", "POST", "PUT", "OPTIONS"]
     allow_headers = ["authorization"]
   }
