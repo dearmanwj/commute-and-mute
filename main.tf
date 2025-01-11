@@ -13,7 +13,7 @@ terraform {
 
   backend "s3" {
     bucket = "commute-and-mute-tf-backend"
-    key = "commute-and-mute-tfstate"
+    key    = "commute-and-mute-tfstate"
     region = "eu-north-1"
   }
 

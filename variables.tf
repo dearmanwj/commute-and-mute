@@ -6,11 +6,11 @@ variable "aws_region" {
 }
 
 variable "strava_secret" {
-  type = string
+  type      = string
   sensitive = true
 }
 
 variable "webhook_verify_token" {
-  type = string
+  type      = string
   sensitive = true
 }

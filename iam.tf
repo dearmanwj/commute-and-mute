@@ -45,24 +45,24 @@ resource "aws_iam_role_policy_attachment" "lambda_logging_policy_attachment" {
 
 // create a policy to read/write from dynamodb table
 data "aws_iam_policy_document" "dynamodb_policy" {
-    statement {
-      actions = [
-        "dynamodb:GetItem",
-        "dynamodb:PutItem",
-        "dynamodb:UpdateItem",
-        "dynamodb:DeleteItem"
-        ]
-        resources = [aws_dynamodb_table.cam-users.arn]
-        effect = "Allow"
-    }
+  statement {
+    actions = [
+      "dynamodb:GetItem",
+      "dynamodb:PutItem",
+      "dynamodb:UpdateItem",
+      "dynamodb:DeleteItem"
+    ]
+    resources = [aws_dynamodb_table.cam-users.arn]
+    effect    = "Allow"
+  }
 }
 
 resource "aws_iam_policy" "dynamodb_policy" {
-  name = "DynamoDBPolicy"
+  name   = "DynamoDBPolicy"
   policy = data.aws_iam_policy_document.dynamodb_policy.json
 }
 
 resource "aws_iam_role_policy_attachment" "dynamodb_policy" {
-    role = aws_iam_role.iam_for_lambda.id
-    policy_arn = aws_iam_policy.dynamodb_policy.arn
+  role       = aws_iam_role.iam_for_lambda.id
+  policy_arn = aws_iam_policy.dynamodb_policy.arn
 }
