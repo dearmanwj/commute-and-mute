@@ -139,6 +139,8 @@ func ProcessActivity(ctx context.Context, update StravaEvent) (err error) {
 			if err != nil {
 				return err
 			}
+			user.Counter++
+			db.UpdateUser(ctx, user)
 			return nil
 		} else {
 			log.Println("ride not between home and work locations")

@@ -1,6 +1,9 @@
 package main
 
-import "testing"
+import (
+	"testing"
+	"willd/commute-and-mute/internal/users"
+)
 
 func TestDecodeEvent(t *testing.T) {
 	// Given
@@ -23,5 +26,25 @@ func TestDecodeEvent(t *testing.T) {
 	}
 	if result.AspectType != "update" {
 		t.Errorf("did not get correct values")
+	}
+}
+
+func TestCounterIncrement(t *testing.T) {
+	user := users.User{
+		ID:           12,
+		AccessToken:  "",
+		RefreshToken: "",
+		HomeLat:      "ewf",
+		HomeLng:      "fef",
+		WorkLat:      "ef",
+		WorkLng:      "df",
+		ExpiresAt:    123,
+		Counter:      0,
+	}
+
+	user.Counter++
+
+	if user.Counter != 1 {
+		t.Errorf("Counter not incremented")
 	}
 }
