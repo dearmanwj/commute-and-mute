@@ -17,11 +17,12 @@ type User struct {
 	ID           int
 	AccessToken  string
 	RefreshToken string
-	HomeLat      float64
-	HomeLng      float64
-	WorkLat      float64
-	WorkLng      float64
+	HomeLat      string
+	HomeLng      string
+	WorkLat      string
+	WorkLng      string
 	ExpiresAt    int64
+	Counter      int
 }
 
 type TableBasics struct {
@@ -70,7 +71,7 @@ func (t TableBasics) GetUser(ctx context.Context, id int) (User, error) {
 	}
 
 	if response.Item == nil {
-		return User{HomeLat: -1, HomeLng: -1, WorkLat: -1, WorkLng: -1}, nil
+		return User{HomeLat: "-1", HomeLng: "-1", WorkLat: "-1", WorkLng: "-1"}, nil
 	}
 
 	err = attributevalue.UnmarshalMap(response.Item, &user)

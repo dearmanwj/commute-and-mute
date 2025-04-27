@@ -43,10 +43,10 @@ func TestGetUser(t *testing.T) {
 	user, err := db.GetUser(context.Background(), 123)
 
 	expected := User{
-		HomeLat: -1,
-		HomeLng: -1,
-		WorkLat: -1,
-		WorkLng: -1,
+		HomeLat: "-1",
+		HomeLng: "-1",
+		WorkLat: "-1",
+		WorkLng: "-1",
 	}
 
 	if err != nil {

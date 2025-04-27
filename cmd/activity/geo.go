@@ -3,11 +3,12 @@ package main
 import (
 	"log"
 	"math"
+	"strconv"
 )
 
 const RadiusKM float64 = 0.1
 
-func IsWithinRadius(lat1, lng1, lat2, lng2 float64) bool {
+func IsWithinRadius(lat1, lng1, lat2, lng2 string) bool {
 	distKm := hsDist(
 		degToRad(lat1),
 		degToRad(lng1),
@@ -18,8 +19,12 @@ func IsWithinRadius(lat1, lng1, lat2, lng2 float64) bool {
 	return distKm < RadiusKM
 }
 
-func degToRad(deg float64) float64 {
-	return deg * math.Pi / 180
+func degToRad(deg string) float64 {
+	degFloat, err := strconv.ParseFloat(deg, 64)
+	if err != nil {
+		log.Panicf("error parsing db info %v", err)
+	}
+	return degFloat * math.Pi / 180
 }
 
 func haversine(theta float64) float64 {

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 	"willd/commute-and-mute/internal/strava"
@@ -128,7 +129,11 @@ func ProcessActivity(ctx context.Context, update StravaEvent) (err error) {
 	if strings.EqualFold(newActivity.Type, "ride") {
 		log.Println("Received Ride activity")
 		route, _ := maps.DecodePolyline(newActivity.Map.Polyline)
-		if isCommute(route[0].Lat, route[0].Lng, route[len(route)-1].Lat, route[len(route)-1].Lng, user) {
+		startLat := strconv.FormatFloat(route[0].Lat, 'E', -1, 64)
+		startLng := strconv.FormatFloat(route[0].Lng, 'E', -1, 64)
+		endLat := strconv.FormatFloat(route[len(route)-1].Lat, 'E', -1, 64)
+		endLng := strconv.FormatFloat(route[len(route)-1].Lng, 'E', -1, 64)
+		if isCommute(startLat, startLng, endLat, endLng, user) {
 			log.Println("is ride and commute")
 			err := stravaClient.UpdateActivity(newActivity.Id, token)
 			if err != nil {
@@ -142,7 +147,7 @@ func ProcessActivity(ctx context.Context, update StravaEvent) (err error) {
 	return nil
 }
 
-func isCommute(startLat, startLng, endLat, endLng float64, user users.User) bool {
+func isCommute(startLat, startLng, endLat, endLng string, user users.User) bool {
 	var isCommute bool = false
 	isHomeStart := IsWithinRadius(user.HomeLat, user.HomeLng, startLat, startLng)
 	if isHomeStart {
